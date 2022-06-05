@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  newsletter:
+    image: "statictask/newsletter:development"
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.dev
+    command:
+    - "server"
+    volumes:
+    - .:/app
+    ports:
+      - 8080:8080
+    environment:
+      FREEGROW_POSTGRES_HOST: postgres
+      FREEGROW_POSTGRES_PORT: "5432"
+      FREEGROW_POSTGRES_DATABASE: newsletter
+      FREEGROW_POSTGRES_USERNAME: newsletter
+      FREEGROW_POSTGRES_PASSWORD: newsletter
+      FREEGROW_BIND_ADDRESS: 0.0.0.0:8080
+    depends_on:
+    - postgres
+  postgres:
+    image: postgres:14.3
+    environment:
+      POSTGRES_DB: newsletter
+      POSTGRES_USER: newsletter
+      POSTGRES_PASSWORD: newsletter
+    ports:
+    - 5432:5432
+    volumes:
+    - newsletter_db_data:/var/lib/postgresql/data
+
+volumes:
+  newsletter_db_data: {}

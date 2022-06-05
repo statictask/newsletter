@@ -1,0 +1,30 @@
+include ./rules/Makefile.settings
+include ./rules/Makefile.git
+
+ifndef DOCKER_DEF
+DOCKER_DEF = 1
+
+DOCKER_PRODUCTION_TAG_LATEST := "latest"
+DOCKER_PRODUCTION_TAG_VERSION := ${GIT_VERSION}
+
+DOCKER_PRODUCTION_IMAGE := ${SETTINGS_ORGANIZATION_NAME}/${SETTINGS_PROJECT_NAME}
+DOCKER_PRODUCTION_IMAGE_LATEST := ${DOCKER_PRODUCTION_IMAGE}:${DOCKER_PRODUCTION_TAG_LATEST}
+DOCKER_PRODUCTION_IMAGE_VERSION := ${DOCKER_PRODUCTION_IMAGE}:${DOCKER_PRODUCTION_TAG_VERSION}
+
+.PHONY: docker-build
+docker-build:
+	@echo "Building docker"
+	sudo docker build -f docker/Dockerfile -t ${DOCKER_PRODUCTION_IMAGE_LATEST} -t ${DOCKER_PRODUCTION_IMAGE_VERSION} .
+
+.PHONY: docker-release
+docker-release: docker-build
+	@echo "Releasing docker"
+	sudo docker push ${DOCKER_PRODUCTION_IMAGE_LATEST}
+	sudo docker push ${DOCKER_PRODUCTION_IMAGE_VERSION}
+
+.PHONY: compose-run
+compose-run:
+	@echo "Running project"
+	sudo docker-compose up -d
+
+endif
