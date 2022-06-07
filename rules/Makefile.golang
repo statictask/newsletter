@@ -116,8 +116,8 @@ go-cover/text:
 .PHONY: go-fix
 go-fix:
 	@echo "Making sure go.mod matches the source code"
-	$(GOMOD) vendor
 	$(GOMOD) tidy
+	$(GOMOD) vendor
 ifneq ($(SOURCES),)
 	$(GOIMPORTS) -w $(SOURCES)
 endif

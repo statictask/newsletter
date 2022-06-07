@@ -3,8 +3,8 @@ package subscription
 import "fmt"
 
 type Subscription struct {
-	ID    int64
-	Email string
+	ID    int64  `json:"subscription_id"`
+	Email string `json:"email"`
 }
 
 // New returns an empty Subscription
@@ -32,7 +32,7 @@ func (s *Subscription) Update() error {
 
 // Delete the subscription from the database
 func (s *Subscription) Delete() error {
-	if err := deleteSubscription(s); err != nil {
+	if err := deleteSubscription(s.ID); err != nil {
 		return fmt.Errorf("unable to delete subscription: %v", err)
 	}
 

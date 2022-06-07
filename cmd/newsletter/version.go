@@ -22,12 +22,20 @@ package main
 
 import (
 	"fmt"
-	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/statictask/newsletter/internal/global"
 )
 
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "check newsletter CLI version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(global.Version)
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(versionCmd)
 }
