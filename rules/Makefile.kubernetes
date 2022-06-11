@@ -1,0 +1,30 @@
+include ./rules/Makefile.settings
+
+ifndef KUBERNETES_DEF
+KUBERNETES_DEF = 1
+
+-include .env
+export $(shell sed 's/=.*//' ".env" 2> /dev/null)
+
+KUBERNETES_NAMESPACE ?= newsletter
+NEWSLETTER_POSTGRES_HOST ?= postgres
+NEWSLETTER_POSTGRES_PORT ?= "5432"
+NEWSLETTER_POSTGRES_DATABASE ?= newsletter
+NEWSLETTER_POSTGRES_USERNAME ?= newsletter
+NEWSLETTER_POSTGRES_PASSWORD ?= newsletter
+NEWSLETTER_BIND_ADDRESS ?= 0.0.0.0:8080
+
+.PHONY: kubernetes-deploy
+kubernetes-deploy:
+	@echo "Deploying to k8s"
+	@helm install \
+		--set config.postgres.host="${NEWSLETTER_POSTGRES_HOST}" \
+		--set config.postgres.port="${NEWSLETTER_POSTGRES_PORT}" \
+		--set config.postgres.database="${NEWSLETTER_POSTGRES_DATABASE}" \
+		--set config.postgres.username="${NEWSLETTER_POSTGRES_USERNAME}" \
+		--set config.postgres.password="${NEWSLETTER_POSTGRES_PASSWORD}" \
+		--set config.server.bindAddress="${NEWSLETTER_BIND_ADDRESS}" \
+		--namespace ${KUBERNTES_NAMESPACE} --create-namespace \
+		newsletter helm/newsletter 
+
+endif
