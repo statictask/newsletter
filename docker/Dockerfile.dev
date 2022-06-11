@@ -1,0 +1,18 @@
+FROM golang:1.18-alpine
+
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
+WORKDIR /usr/src/app
+
+RUN apk update \
+  && apk add make git
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+ADD . .
+RUN make install
+
+ENTRYPOINT ["newsletter"]
