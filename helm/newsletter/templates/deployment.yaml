@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "newsletter.fullname" . }}
+  labels:
+    {{- include "newsletter.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "newsletter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "newsletter.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "newsletter.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:          
+            - name: "NEWSLETTER_POSTGRES_HOST"
+              valueFrom:
+                secretKeyRef:
+                  key: newsletterPostgresHost
+                  name: {{ .Release.Name }}-config
+            - name: "NEWSLETTER_POSTGRES_PORT"
+              valueFrom:
+                secretKeyRef:
+                  key: newsletterPostgresPort
+                  name: {{ .Release.Name }}-config
+            - name: "NEWSLETTER_POSTGRES_DATABASE"
+              valueFrom:
+                secretKeyRef:
+                  key: newsletterPostgresDatabase
+                  name: {{ .Release.Name }}-config
+            - name: "NEWSLETTER_POSTGRES_USERNAME"
+              valueFrom:
+                secretKeyRef:
+                  key: newsletterPostgresUsername
+                  name: {{ .Release.Name }}-config
+            - name: "NEWSLETTER_POSTGRES_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: newsletterPostgresPassword
+                  name: {{ .Release.Name }}-config
+            - name: "NEWSLETTER_BIND_ADDRESS"
+              valueFrom:
+                secretKeyRef:
+                  key: newsletterBindAddress
+                  name: {{ .Release.Name }}-config
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

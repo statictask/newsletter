@@ -14,3 +14,6 @@ coverage.out
 # cmd binaries
 cmd/newsletter/newsletter
 cmd/migrate/migrate
+
+# secret environment
+.env
