@@ -24,6 +24,6 @@ USER appuser
 WORKDIR /app
 COPY --from=builder /usr/src/app/build/newsletter /newsletter
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["/newsletter"]

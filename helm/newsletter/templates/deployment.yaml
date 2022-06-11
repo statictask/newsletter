@@ -23,6 +23,7 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["server"]
           env:          
             - name: "NEWSLETTER_POSTGRES_HOST"
               valueFrom:
