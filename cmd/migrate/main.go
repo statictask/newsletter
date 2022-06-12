@@ -26,11 +26,11 @@ func main() {
 	cmd := flag.String("cmd", "up", "[up or down]")
 	flag.Parse()
 
-	pgUsername := getEnv("POSTGRES_USER", "newsletter")
-	pgPassword := getEnv("POSTGRES_PASSWORD", "newsletter")
-	pgDatabase := getEnv("POSTGRES_DATABASE", "newsletter")
-	pgHost := getEnv("POSTGRES_HOST", "localhost")
-	pgPort := getEnv("POSTGRES_PORT", "5432")
+	pgUsername := getEnv("NEWSLETTER_POSTGRES_USERNAME", "newsletter")
+	pgPassword := getEnv("NEWSLETTER_POSTGRES_PASSWORD", "newsletter")
+	pgDatabase := getEnv("NEWSLETTER_POSTGRES_DATABASE", "newsletter")
+	pgHost := getEnv("NEWSLETTER_POSTGRES_HOST", "localhost")
+	pgPort := getEnv("NEWSLETTER_POSTGRES_PORT", "5432")
 
 	m, err := migrate.New(
 		"file://db/migrations",
