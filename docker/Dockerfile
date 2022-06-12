@@ -23,7 +23,6 @@ FROM alpine:3.16 AS final
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-WORKDIR /app
 COPY --from=builder /usr/src/app/build/newsletter /newsletter
 COPY --from=builder /usr/src/app/build/migrate /migrate
 COPY --from=builder /usr/src/app/db/migrations /db/migrations
