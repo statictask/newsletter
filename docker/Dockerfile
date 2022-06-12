@@ -12,6 +12,8 @@ RUN apk update \
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
+ENV GOBUILDTAGS="migrate"
+
 ADD . .
 RUN make build
 
@@ -23,7 +25,11 @@ USER appuser
 
 WORKDIR /app
 COPY --from=builder /usr/src/app/build/newsletter /newsletter
+COPY --from=builder /usr/src/app/build/migrate /migrate
+COPY --from=builder /usr/src/app/db/migrations /db/migrations
 
 EXPOSE 8080
 
 ENTRYPOINT ["/newsletter"]
+
+CMD ["server"]

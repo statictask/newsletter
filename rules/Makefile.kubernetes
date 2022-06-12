@@ -18,7 +18,7 @@ NEWSLETTER_BIND_ADDRESS ?= "0.0.0.0:8080"
 .PHONY: kubernetes-deploy
 kubernetes-deploy:
 	@echo "Deploying to k8s"
-	helm install \
+	helm upgrade --install \
 		--set image.tag="${KUBERNETES_IMAGE_VERSION}" \
 		--set config.postgres.host="${NEWSLETTER_POSTGRES_HOST}" \
 		--set config.postgres.port="${NEWSLETTER_POSTGRES_PORT}" \

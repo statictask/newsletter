@@ -2,6 +2,7 @@
 #
 
 include ./rules/Makefile.settings
+include ./rules/Makefile.git
 
 ifndef GO_DEF
 GO_DEF = 1
@@ -17,7 +18,7 @@ endif
 
 # Use linker flags to provide version settings to the target
 # Also build it with as much as possible static links. It may do the build a bit slower
-LDFLAGS=-ldflags "-X=${SETTINGS_GIT_REMOTE}/internal/global.Version=$(VERSION) -extldflags '-static'"
+LDFLAGS=-ldflags "-X=${GIT_REMOTE}/internal/global.Version=$(GIT_VERSION) -extldflags '-static'"
 
 GOBASE := $(shell pwd)
 GOBINDIR := "$(GOBASE)/build"
