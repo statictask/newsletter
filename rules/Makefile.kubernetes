@@ -27,6 +27,11 @@ kubernetes-deploy:
 		--set config.postgres.password="${NEWSLETTER_POSTGRES_PASSWORD}" \
 		--set config.server.bindAddress="${NEWSLETTER_BIND_ADDRESS}" \
 		--namespace ${KUBERNETES_NAMESPACE} --create-namespace \
-		newsletter helm/newsletter 
+		newsletter helm/newsletter
+
+.PHONY: kubernetes-migrate
+kubernetes-migrate:
+	@echo "Migrating remote database from k8s"
+	kubectl exec -it -n ${KUBERNETES_NAMESPACE} deploy/newsletter -- /migrate up
 
 endif
