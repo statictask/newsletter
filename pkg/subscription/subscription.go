@@ -3,8 +3,9 @@ package subscription
 import "fmt"
 
 type Subscription struct {
-	ID    int64  `json:"subscription_id"`
-	Email string `json:"email"`
+	ID        int64  `json:"subscription_id"`
+	Email     string `json:"email"`
+	ProjectID int64  `json:"project_id"`
 }
 
 // New returns an empty Subscription

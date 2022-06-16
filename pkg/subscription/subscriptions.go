@@ -4,11 +4,13 @@ import "fmt"
 
 // Subscriptions is the entity used for controlling
 // interactions with many subscriptions in the database
-type Subscriptions struct{}
+type Subscriptions struct {
+	projectID int64
+}
 
 // NewSubscriptions returns a Subscriptions controller
-func NewSubscriptions() *Subscriptions {
-	return &Subscriptions{}
+func NewSubscriptions(projectID int64) *Subscriptions {
+	return &Subscriptions{projectID}
 }
 
 // All returns all the subscriptions registered in the database
@@ -30,6 +32,8 @@ func (ss *Subscriptions) Get(subscriptionID int64) (*Subscription, error) {
 
 // Where return many subscriptions according to a map of attrs
 func (ss *Subscriptions) Where(exp string) ([]*Subscription, error) {
+	exp = fmt.Sprintf("%s project_id=%v", exp, ss.projectID)
+
 	subscriptions, err := getSubscriptionsWhere(exp)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get subscriptions: %v", err)
@@ -42,6 +46,18 @@ func (ss *Subscriptions) Where(exp string) ([]*Subscription, error) {
 func (ss *Subscriptions) Delete(subscriptionID int64) error {
 	if err := deleteSubscription(subscriptionID); err != nil {
 		return fmt.Errorf("unable to delete subscription: %v", err)
+	}
+
+	return nil
+}
+
+// Add creates a new entry in the project's subscriptions
+// the function creates a new subscription entry in the database
+func (ss *Subscriptions) Add(s *Subscription) error {
+	s.ProjectID = ss.projectID
+
+	if err := s.Create(); err != nil {
+		return err
 	}
 
 	return nil
