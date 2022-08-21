@@ -18,7 +18,7 @@ services:
       NEWSLETTER_POSTGRES_DATABASE: newsletter
       NEWSLETTER_POSTGRES_USERNAME: newsletter
       NEWSLETTER_POSTGRES_PASSWORD: newsletter
-      NEWSLETTER_BIND_ADDRESS: 0.0.0.0:8080
+      NEWSLETTER_BIND_ADDRESS: ":8080"
     depends_on:
     - postgres
   postgres:

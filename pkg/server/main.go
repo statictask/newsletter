@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	originsOk = handlers.AllowedOrigins([]string{"*"})
+	originsOk = handlers.AllowedOrigins([]string{"http://luan.com"})
 	methodsOk = handlers.AllowedMethods(
 		[]string{"GET", "HEAD", "POST", "UPDATE", "DELETE", "PUT", "OPTIONS"},
 	)
