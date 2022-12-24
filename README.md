@@ -107,3 +107,8 @@ Newsletter's docker image has a `/migrate` command that you can use to migrate
 database from your workloads on Kubernetes.
 
     kubectl exec -it -n newsletter deploy/newsletter -- /migrate up
+
+## Additional documentation
+
+- [Use your browser to test your local deployment](./form/README.md)
+- [Use these examples to create resources using curl](./examples/README.md)
