@@ -16,7 +16,7 @@ futher step since what we have today doesn't support multi-tenant
 workloads.
 
 The idea is to make it free for most users that have a very simple
-use-cases and sell honest plans just for heavy users. All the features
+use-cases and sell honest plans for heavy users. All the features
 might be always available for everyone regardless of the plan being
 paid or not.
 
@@ -48,11 +48,23 @@ the migrations to the brand new database.
 
 The service is accessible under `http://localhost:8080/`
 
+To drop migrations run
+
+    # terminal 2
+    make drop
+
+### Connect to local database
+
+If you're using docker you can use a shortcut to connect to the local
+database
+
+    make connect
+
 ## Production
 
 ### Building production-ready Docker images
 
-Note: you'll need permissions to submit new images to our registry.
+> **Note**: you'll need permissions to submit new images to our registry.
 
 The default docker registry used by the organization is `statictask/newsletter`.
 Docker tags reflect the version of the code (git tags). The `latest` tag
@@ -85,7 +97,7 @@ NEWSLETTER_POSTGRES_HOST="db.example.com"
 NEWSLETTER_POSTGRES_PASSWORD="example"
 ```
 
-Then let make do the job for you
+Use make to deploy it to Kubernetes.
 
     make kubernetes-deploy
 

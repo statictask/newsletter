@@ -18,6 +18,7 @@ var (
 	headersOk = handlers.AllowedHeaders(
 		[]string{
 			"Accept",
+			"Origin",
 			"Content-Type",
 			"Content-Length",
 			"Accept-Encoding",

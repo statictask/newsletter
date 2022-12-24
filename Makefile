@@ -78,3 +78,8 @@ migrate:
 drop:
 	@echo ">  Migrating: DOWN"
 	$(GORUN) -tags migrate cmd/migrate/main.go -cmd down
+
+.PHONY: connect
+connect:
+	@echo "> Connecting to local DB"
+	psql postgres://newsletter:newsletter@localhost:5432/newsletter
