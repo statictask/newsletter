@@ -1,3 +1,4 @@
 {
-	"domain": "statictask.io"
+  "domain": "statictask.io",
+  "feed_url": "https://statictask.io/rss.xml"
 }

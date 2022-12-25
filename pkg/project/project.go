@@ -9,6 +9,7 @@ import (
 type Project struct {
 	ID     int64  `json:"project_id"`
 	Domain string `json:"domain"`
+	FeedURL string `json:"feed_url"`
 }
 
 // New returns an empty Project

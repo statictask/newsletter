@@ -18,11 +18,12 @@ func insertProject(project *Project) error {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO projects (domain) VALUES ($1) RETURNING project_id`
+	sqlStatement := `INSERT INTO projects (domain, feed_url) VALUES ($1, $2) RETURNING project_id`
 
 	if err := db.QueryRow(
 		sqlStatement,
 		project.Domain,
+		project.FeedURL,
 	).Scan(&project.ID); err != nil {
 		log.L.Fatal("unable to execute the query", zap.Error(err))
 	}
@@ -31,6 +32,7 @@ func insertProject(project *Project) error {
 		"created project record",
 		zap.Int64("id", project.ID),
 		zap.String("domain", project.Domain),
+		zap.String("feed_url", project.FeedURL),
 	)
 
 	return nil
@@ -45,7 +47,7 @@ func getProjectWhere(expression string) (*Project, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT project_id,domain FROM projects"
+	sqlStatement := "SELECT project_id,domain,feed_url FROM projects"
 
 	if expression != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
@@ -54,7 +56,7 @@ func getProjectWhere(expression string) (*Project, error) {
 	row := db.QueryRow(sqlStatement)
 	project := New()
 
-	if err := row.Scan(&project.ID, &project.Domain); err != nil {
+	if err := row.Scan(&project.ID, &project.Domain, &project.FeedURL); err != nil {
 		return nil, fmt.Errorf("unable to scan a project row: %v", err)
 	}
 
@@ -72,7 +74,7 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT project_id,domain FROM projects"
+	sqlStatement := "SELECT project_id,domain,feed_url FROM projects"
 
 	if expression != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
@@ -88,7 +90,7 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 	for rows.Next() {
 		project := New()
 
-		if err := rows.Scan(&project.ID, &project.Domain); err != nil {
+		if err := rows.Scan(&project.ID, &project.Domain, &project.FeedURL); err != nil {
 			return projects, fmt.Errorf("unable to scan a project row: %v", err)
 		}
 
@@ -108,12 +110,12 @@ func updateProject(project *Project) error {
 
 	defer db.Close()
 
-	sqlStatement := `UPDATE projects SET domain=$1 WHERE project_id=$2`
+	sqlStatement := `UPDATE projects SET domain=$1,feed_url=$2 WHERE project_id=$3`
 
-	res, err := db.Exec(sqlStatement, project.Domain, project.ID)
+	res, err := db.Exec(sqlStatement, project.Domain, project.FeedURL, project.ID)
 	if err != nil {
 		return fmt.Errorf(
-			"unable to execute `%s` with project_id `%v`: %v",
+			"unable to execute `%s`: %v",
 			sqlStatement, project.ID, err,
 		)
 	}

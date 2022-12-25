@@ -19,7 +19,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/statictask/newsletter/internal/database"
 	"github.com/statictask/newsletter/internal/log"
+	"github.com/statictask/newsletter/pkg/mailer"
 	"github.com/statictask/newsletter/pkg/server"
+	"github.com/statictask/newsletter/pkg/watcher"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +30,7 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "newsletter server API",
 	Long:  `newsletter server API`,
-	Run:   startBrain,
+	Run:   startServer,
 }
 
 func init() {
@@ -37,10 +39,11 @@ func init() {
 	serverCmd.Flags().String("bind", "", "server bind address")
 }
 
-func startBrain(cmd *cobra.Command, args []string) {
+func startServer(cmd *cobra.Command, args []string) {
 	log.L.Info("initializing system")
 
 	initDB(cmd, args)
+	initEmailService(cmd, args)
 	initServer(cmd, args)
 
 	log.L.Info("finished")
@@ -60,6 +63,14 @@ func initDB(cmd *cobra.Command, args []string) {
 	}
 
 	log.L.Info("successfully connected to postgres!")
+}
+
+func initEmailService(cmd *cobra.Command, args []string) {
+	m := mailer.New()
+	message := m.Run()
+
+	r := watcher.New()
+	r.Run(message)
 }
 
 func initServer(cmd *cobra.Command, args []string) {
