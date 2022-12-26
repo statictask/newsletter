@@ -2,14 +2,17 @@ package project
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/statictask/newsletter/pkg/feedreader"
 	"github.com/statictask/newsletter/pkg/subscription"
 )
 
 type Project struct {
-	ID     int64  `json:"project_id"`
-	Domain string `json:"domain"`
-	FeedURL string `json:"feed_url"`
+	ID        int64     `json:"project_id"`
+	Domain    string    `json:"domain"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // New returns an empty Project
@@ -44,7 +47,12 @@ func (p *Project) Delete() error {
 	return nil
 }
 
-// Subscriptions return an inteface for interact with Project's subscriptions
+// Subscriptions return a lazy inteface for interacting with project's subscriptions
 func (p *Project) Subscriptions() *subscription.Subscriptions {
 	return subscription.NewSubscriptions(p.ID)
+}
+
+// FeedReaders return a lazy interface for interacting with project's feed readers
+func (p *Project) FeedReaders() *feedreader.FeedReaders {
+	return feedreader.NewFeedReaders(p.ID)
 }

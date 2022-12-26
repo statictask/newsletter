@@ -1,11 +1,16 @@
 package subscription
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Subscription struct {
-	ID        int64  `json:"subscription_id"`
-	Email     string `json:"email"`
-	ProjectID int64  `json:"project_id"`
+	ID        int64     `json:"subscription_id"`
+	Email     string    `json:"email"`
+	ProjectID int64     `json:"project_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // New returns an empty Subscription

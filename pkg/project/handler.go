@@ -10,7 +10,7 @@ import (
 )
 
 // insertProject inserts a project in the database
-func insertProject(project *Project) error {
+func insertProject(p *Project) error {
 	db, err := database.Connect()
 	if err != nil {
 		return err
@@ -18,22 +18,16 @@ func insertProject(project *Project) error {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO projects (domain, feed_url) VALUES ($1, $2) RETURNING project_id`
+	sqlStatement := `INSERT INTO projects (domain) VALUES ($1) RETURNING project_id,created_at,updated_at`
 
 	if err := db.QueryRow(
 		sqlStatement,
-		project.Domain,
-		project.FeedURL,
-	).Scan(&project.ID); err != nil {
+		p.Domain,
+	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 		log.L.Fatal("unable to execute the query", zap.Error(err))
 	}
 
-	log.L.Info(
-		"created project record",
-		zap.Int64("id", project.ID),
-		zap.String("domain", project.Domain),
-		zap.String("feed_url", project.FeedURL),
-	)
+	log.L.Info("created project record", zap.Int64("project_id", p.ID), zap.String("domain", p.Domain))
 
 	return nil
 }
@@ -47,20 +41,20 @@ func getProjectWhere(expression string) (*Project, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT project_id,domain,feed_url FROM projects"
+	sqlStatement := "SELECT project_id,domain FROM projects"
 
 	if expression != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
 	}
 
 	row := db.QueryRow(sqlStatement)
-	project := New()
+	p := New()
 
-	if err := row.Scan(&project.ID, &project.Domain, &project.FeedURL); err != nil {
+	if err := row.Scan(&p.ID, &p.Domain); err != nil {
 		return nil, fmt.Errorf("unable to scan a project row: %v", err)
 	}
 
-	return project, nil
+	return p, nil
 }
 
 // getProjects returns all projects in the database
@@ -74,7 +68,7 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT project_id,domain,feed_url FROM projects"
+	sqlStatement := "SELECT project_id,domain FROM projects"
 
 	if expression != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
@@ -88,13 +82,13 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		project := New()
+		p := New()
 
-		if err := rows.Scan(&project.ID, &project.Domain, &project.FeedURL); err != nil {
+		if err := rows.Scan(&p.ID, &p.Domain); err != nil {
 			return projects, fmt.Errorf("unable to scan a project row: %v", err)
 		}
 
-		projects = append(projects, project)
+		projects = append(projects, p)
 	}
 
 	return projects, nil
@@ -102,7 +96,7 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 }
 
 // updateProject updates a project in the database
-func updateProject(project *Project) error {
+func updateProject(p *Project) error {
 	db, err := database.Connect()
 	if err != nil {
 		return err
@@ -110,14 +104,11 @@ func updateProject(project *Project) error {
 
 	defer db.Close()
 
-	sqlStatement := `UPDATE projects SET domain=$1,feed_url=$2 WHERE project_id=$3`
+	sqlStatement := `UPDATE projects SET domain=$1 WHERE project_id=$2`
 
-	res, err := db.Exec(sqlStatement, project.Domain, project.FeedURL, project.ID)
+	res, err := db.Exec(sqlStatement, p.Domain, p.ID)
 	if err != nil {
-		return fmt.Errorf(
-			"unable to execute `%s`: %v",
-			sqlStatement, project.ID, err,
-		)
+		return fmt.Errorf("unable to execute `%s`: %v", sqlStatement, err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
@@ -125,7 +116,7 @@ func updateProject(project *Project) error {
 		return fmt.Errorf("failed checking the affected rows: %v", err)
 	}
 
-	log.L.Info("project rows updated", zap.Int64("total", rowsAffected))
+	log.L.Info("project rows updated", zap.Int64("total", rowsAffected), zap.Int64("project_id", p.ID))
 
 	return nil
 }
@@ -154,7 +145,7 @@ func deleteProject(projectID int64) error {
 		return fmt.Errorf("failed checking the affected rows: %v", err)
 	}
 
-	log.L.Info("project rows deleted", zap.Int64("total", rowsAffected))
+	log.L.Info("project rows deleted", zap.Int64("total", rowsAffected), zap.Int64("project_id", projectID))
 
 	return nil
 }
