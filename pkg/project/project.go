@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/statictask/newsletter/pkg/feedreader"
+	"github.com/statictask/newsletter/pkg/pipeline"
 	"github.com/statictask/newsletter/pkg/subscription"
 )
 
 type Project struct {
 	ID        int64     `json:"project_id"`
-	Domain    string    `json:"domain"`
+	Name      string    `json:"name"`
+	FeedURL   string    `json:"feed_url"`
+	IsEnabled bool      `json:"is_enabled"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -52,7 +54,7 @@ func (p *Project) Subscriptions() *subscription.Subscriptions {
 	return subscription.NewSubscriptions(p.ID)
 }
 
-// FeedReaders return a lazy interface for interacting with project's feed readers
-func (p *Project) FeedReaders() *feedreader.FeedReaders {
-	return feedreader.NewFeedReaders(p.ID)
+// Pipelines return a lazy inteface for interacting with project's pipelines
+func (p *Project) Pipelines() *pipeline.Pipelines {
+	return pipeline.NewPipelines(p.ID)
 }

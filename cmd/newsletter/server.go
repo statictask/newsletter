@@ -19,9 +19,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/statictask/newsletter/internal/database"
 	"github.com/statictask/newsletter/internal/log"
-	"github.com/statictask/newsletter/pkg/mailer"
+	"github.com/statictask/newsletter/pkg/scheduler"
 	"github.com/statictask/newsletter/pkg/server"
-	"github.com/statictask/newsletter/pkg/watcher"
 	"go.uber.org/zap"
 )
 
@@ -43,7 +42,7 @@ func startServer(cmd *cobra.Command, args []string) {
 	log.L.Info("initializing system")
 
 	initDB(cmd, args)
-	initEmailService(cmd, args)
+	initSchedulers(cmd, args)
 	initServer(cmd, args)
 
 	log.L.Info("finished")
@@ -65,12 +64,9 @@ func initDB(cmd *cobra.Command, args []string) {
 	log.L.Info("successfully connected to postgres!")
 }
 
-func initEmailService(cmd *cobra.Command, args []string) {
-	m := mailer.New()
-	message := m.Run()
-
-	r := watcher.New()
-	r.Run(message)
+func initSchedulers(cmd *cobra.Command, args []string) {
+	ps := scheduler.NewPipelineScheduler()
+	ps.Start()
 }
 
 func initServer(cmd *cobra.Command, args []string) {

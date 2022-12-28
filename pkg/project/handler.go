@@ -18,16 +18,21 @@ func insertProject(p *Project) error {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO projects (domain) VALUES ($1) RETURNING project_id,created_at,updated_at`
+	sqlStatement := `INSERT INTO projects (name,feed_url) VALUES ($1,$2) RETURNING project_id,is_enabled,created_at,updated_at`
 
 	if err := db.QueryRow(
 		sqlStatement,
-		p.Domain,
-	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		p.Name,
+		p.FeedURL,
+	).Scan(&p.ID, &p.IsEnabled, &p.CreatedAt, &p.UpdatedAt); err != nil {
 		log.L.Fatal("unable to execute the query", zap.Error(err))
 	}
 
-	log.L.Info("created project record", zap.Int64("project_id", p.ID), zap.String("domain", p.Domain))
+	log.L.Info(
+		"created project record",
+		zap.Int64("project_id", p.ID),
+		zap.String("name", p.Name),
+	)
 
 	return nil
 }
@@ -41,7 +46,7 @@ func getProjectWhere(expression string) (*Project, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT project_id,domain FROM projects"
+	sqlStatement := "SELECT project_id,name,feed_url,is_enabled,created_at,updated_at FROM projects"
 
 	if expression != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
@@ -50,7 +55,7 @@ func getProjectWhere(expression string) (*Project, error) {
 	row := db.QueryRow(sqlStatement)
 	p := New()
 
-	if err := row.Scan(&p.ID, &p.Domain); err != nil {
+	if err := row.Scan(&p.ID, &p.Name, &p.FeedURL, &p.IsEnabled, &p.CreatedAt, &p.UpdatedAt); err != nil {
 		return nil, fmt.Errorf("unable to scan a project row: %v", err)
 	}
 
@@ -68,7 +73,7 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT project_id,domain FROM projects"
+	sqlStatement := "SELECT project_id,name,feed_url,is_enabled,created_at,updated_at FROM projects"
 
 	if expression != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
@@ -84,7 +89,7 @@ func getProjectsWhere(expression string) ([]*Project, error) {
 	for rows.Next() {
 		p := New()
 
-		if err := rows.Scan(&p.ID, &p.Domain); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.FeedURL, &p.IsEnabled, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return projects, fmt.Errorf("unable to scan a project row: %v", err)
 		}
 
@@ -104,9 +109,9 @@ func updateProject(p *Project) error {
 
 	defer db.Close()
 
-	sqlStatement := `UPDATE projects SET domain=$1 WHERE project_id=$2`
+	sqlStatement := `UPDATE projects SET name=$1,feed_url=$2,is_enabled=$3 WHERE project_id=$4`
 
-	res, err := db.Exec(sqlStatement, p.Domain, p.ID)
+	res, err := db.Exec(sqlStatement, p.Name, p.FeedURL, p.IsEnabled, p.ID)
 	if err != nil {
 		return fmt.Errorf("unable to execute `%s`: %v", sqlStatement, err)
 	}
@@ -116,7 +121,11 @@ func updateProject(p *Project) error {
 		return fmt.Errorf("failed checking the affected rows: %v", err)
 	}
 
-	log.L.Info("project rows updated", zap.Int64("total", rowsAffected), zap.Int64("project_id", p.ID))
+	log.L.Info(
+		"project rows updated",
+		zap.Int64("total", rowsAffected),
+		zap.Int64("project_id", p.ID),
+	)
 
 	return nil
 }

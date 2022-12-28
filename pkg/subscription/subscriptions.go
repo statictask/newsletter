@@ -16,7 +16,7 @@ func NewSubscriptions(projectID int64) *Subscriptions {
 // All returns all the subscriptions registered in the database for
 // a given project
 func (ss *Subscriptions) All() ([]*Subscription, error) {
-	exp = fmt.Sprintf("project_id=%d", ss.projectID)
+	exp := fmt.Sprintf("project_id=%d", ss.projectID)
 
 	subscriptions, err := getSubscriptionsWhere(exp)
 	if err != nil {

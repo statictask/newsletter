@@ -46,3 +46,9 @@ func (pp *Projects) Delete(projectID int64) error {
 
 	return nil
 }
+
+// AllEnabled returns all the projects registered in the database that are enabled
+func (pp *Projects) AllEnabled() ([]*Project, error) {
+	return pp.Where("is_enabled = true")
+}
+

@@ -38,7 +38,7 @@ func (s *Subscription) Update() error {
 
 // Delete the subscription from the database
 func (s *Subscription) Delete() error {
-	if err := deleteSubscription(s.ID); err != nil {
+	if err := deleteSubscription(s.ID, s.ProjectID); err != nil {
 		return fmt.Errorf("unable to delete subscription: %v", err)
 	}
 

@@ -58,7 +58,7 @@ func getSubscriptionWhere(expression string) (*Subscription, error) {
 		return nil, fmt.Errorf("unable to scan a subscription row: %v", err)
 	}
 
-	return subscription, nil
+	return s, nil
 }
 
 // getSubscriptions returns all subscriptions in the database

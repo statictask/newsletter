@@ -83,3 +83,8 @@ drop:
 connect:
 	@echo "> Connecting to local DB"
 	psql postgres://newsletter:newsletter@localhost:5432/newsletter
+
+.PHONY: reset
+reset:
+	@echo ">Resetting everything"
+	sudo docker-compose down --volumes

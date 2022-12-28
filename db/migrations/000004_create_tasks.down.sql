@@ -1,0 +1,5 @@
+BEGIN;
+
+DROP TABLE IF EXISTS tasks;
+DROP TYPE IF EXISTS task_type_t;
+DROP TYPE IF EXISTS task_status_t;
