@@ -67,6 +67,9 @@ func initDB(cmd *cobra.Command, args []string) {
 func initSchedulers(cmd *cobra.Command, args []string) {
 	ps := scheduler.NewPipelineScheduler()
 	ps.Start()
+
+	ts := scheduler.NewTaskScheduler()
+	ts.Start()
 }
 
 func initServer(cmd *cobra.Command, args []string) {

@@ -55,13 +55,22 @@ func (ts *Tasks) Delete(taskID int64) error {
 }
 
 // Add creates a new entry in the pipeline's tasks
-func (ts *Tasks) Add(t *Task) error {
+func (ts *Tasks) Create(taskType TaskType) (*Task, error) {
 	// make sure the Task has the correct ProjectID
+	t := NewTask()
 	t.PipelineID = ts.pipelineID
+	t.Type = taskType
 
 	if err := t.Create(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return t, nil
+}
+
+// GetByType return a single task of a given type
+func (ts *Tasks) GetByType(taskType TaskType) (*Task, error) {
+	exp := fmt.Sprintf("task_type='%v' AND pipeline_id=%d", taskType, ts.pipelineID)
+
+	return getTaskWhere(exp)
 }

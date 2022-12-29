@@ -165,7 +165,7 @@ func insertTask(t *Task) error {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO tasks (pipeline_id,task_type) VALUES ($1) RETURNING task_id,task_status,created_at,updated_at`
+	sqlStatement := `INSERT INTO tasks (pipeline_id,task_type) VALUES ($1,$2) RETURNING task_id,task_status,created_at,updated_at`
 
 	if err := db.QueryRow(
 		sqlStatement,
@@ -203,7 +203,11 @@ func getTaskWhere(expression string) (*Task, error) {
 	t := &Task{}
 
 	if err := row.Scan(&t.ID, &t.PipelineID, &t.Type, &t.Status, &t.CreatedAt, &t.UpdatedAt); err != nil {
-		return nil, fmt.Errorf("unable to scan task row: %v", err)
+		if err != sql.ErrNoRows {
+			return nil, fmt.Errorf("unable to scan task row: %v", err)
+		}
+
+		return nil, nil
 	}
 
 	return t, nil

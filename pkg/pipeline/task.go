@@ -12,10 +12,17 @@ const (
 	Scrape  TaskType = "Scrape"
 	Publish TaskType = "Publish"
 
+	Waiting  TaskStatus = "Waiting"
 	Ready    TaskStatus = "Ready"
 	Running  TaskStatus = "Running"
 	Finished TaskStatus = "Finished"
 	Failed   TaskStatus = "Failed"
+	Aborted  TaskStatus = "Aborted"
+)
+
+var (
+	TaskTypes    []TaskType   = []TaskType{Scrape, Publish}
+	TaskStatuses []TaskStatus = []TaskStatus{Waiting, Ready, Running, Finished, Failed, Aborted}
 )
 
 type Task struct {

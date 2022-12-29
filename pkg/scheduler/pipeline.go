@@ -18,14 +18,14 @@ func NewPipelineScheduler() *PipelineScheduler {
 func (s *PipelineScheduler) Start() (chan Signal, error) {
 	ch := make(chan Signal)
 
-	go s.startProjectPipelineReconcileLoop(ch)
+	go s.startPipelineReconcileLoop(ch)
 
 	return ch, nil
 }
 
-// startProjectPipelineReconcileLoop checks whether there's a condition
+// startPipelineReconcileLoop checks whether there's a condition
 // in which the scheduler needs to create a new pipeline for projects enabled
-func (s *PipelineScheduler) startProjectPipelineReconcileLoop(stop chan Signal) {
+func (s *PipelineScheduler) startPipelineReconcileLoop(stop chan Signal) {
 	log.L.Info("project pipeline reconcile loop started")
 	for {
 		time.Sleep(10 * time.Second)
@@ -77,6 +77,12 @@ func (s *PipelineScheduler) startProjectPipelineReconcileLoop(stop chan Signal) 
 				}
 
 				log.L.Info("creating a new project pipeline", zap.Int64("project_id", p.ID))
+				np, err := p.Pipelines().Create()
+				if err != nil {
+					log.L.Error("failed creating new pipeline", zap.Int64("project_id", p.ID), zap.Error(err))
+				}
+
+				log.L.Info("new pipeline created", zap.Int64("pipeline_id", np.ID), zap.Int64("project_id", p.ID), zap.Error(err))
 			}
 		}
 	}
