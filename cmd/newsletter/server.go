@@ -70,6 +70,9 @@ func initSchedulers(cmd *cobra.Command, args []string) {
 
 	ts := scheduler.NewTaskScheduler()
 	ts.Start()
+
+	ss := scheduler.NewScrapperJobScheduler()
+	ss.Start()
 }
 
 func initServer(cmd *cobra.Command, args []string) {

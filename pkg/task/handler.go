@@ -68,6 +68,18 @@ func getTaskByTypeAndPipelineID(taskType string, pipelineID int64) (*Task, error
 
 // getTasksByPipelineID returns all tasks in the database based on the pipeline ID
 func getTasksByPipelineID(pipelineID int64) ([]*Task, error) {
+	exp := fmt.Sprintf("pipeline_id='%d'", pipelineID)
+	return getTasksWhere(exp)
+}
+
+// getTasksByTypeAndStatus returns all tasks in the database based on the pipeline ID
+func getTasksByTypeAndStatus(taskType, taskStatus string) ([]*Task, error) {
+	exp := fmt.Sprintf("task_type='%s' AND task_status='%s'", taskType, taskStatus)
+	return getTasksWhere(exp)
+}
+
+// getTasksWhere returns all tasks in the database based on the pipeline ID
+func getTasksWhere(expression string) ([]*Task, error) {
 	var ts []*Task
 
 	db, err := database.Connect()
@@ -77,10 +89,11 @@ func getTasksByPipelineID(pipelineID int64) ([]*Task, error) {
 
 	defer db.Close()
 
-	sqlStatement := fmt.Sprintf(
-		"SELECT task_id,pipeline_id,task_type,task_status,created_at,updated_at FROM tasks WHERE pipeline_id=%d",
-		pipelineID,
-	)
+	sqlStatement := "SELECT task_id,pipeline_id,task_type,task_status,created_at,updated_at FROM tasks"
+
+	if expression != "" {
+		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
+	}
 
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -113,7 +126,7 @@ func updateTask(t *Task) error {
 	defer db.Close()
 
 	// only allows update to the task_status field, the other fields are immutable
-	sqlStatement := `UPDATE tasks SET task_status WHERE task_id=$3`
+	sqlStatement := `UPDATE tasks SET task_status=$1 WHERE task_id=$2`
 
 	res, err := db.Exec(sqlStatement, t.Status, t.ID)
 	if err != nil {

@@ -109,7 +109,7 @@ func updateSubscription(s *Subscription) error {
 	defer db.Close()
 
 	// only allows updates to the email field, the other fields are immutable
-	sqlStatement := `UPDATE subscriptions SET email=$1 WHERE subscription_id=$3`
+	sqlStatement := `UPDATE subscriptions SET email=$1 WHERE subscription_id=$2`
 
 	res, err := db.Exec(sqlStatement, s.Email, s.ID)
 	if err != nil {
