@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/statictask/newsletter/pkg/post"
+	"github.com/statictask/newsletter/pkg/task"
 )
 
 type Pipeline struct {
 	ID        int64
 	ProjectID int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
 }
 
 func New() *Pipeline {
@@ -27,23 +28,14 @@ func (p *Pipeline) Create() error {
 	return nil
 }
 
-// Delete the Pipeline from the database
-func (p *Pipeline) Delete() error {
-	if err := deletePipeline(p.ID); err != nil {
-		return fmt.Errorf("unable to delete pipeline: %v", err)
-	}
-
-	return nil
-}
-
 // Tasks returns a lazy interface for interacting with Pipelines's Task objects
-func (p *Pipeline) Tasks() *Tasks {
-	return NewTasks(p.ID)
+func (p *Pipeline) Tasks() *task.PipelineTasks {
+	return task.NewPipelineTasks(p.ID)
 }
 
 // Posts returns a lazy interface for interacting with Pipelines's Post objects
-func (p *Pipeline) Posts() *post.Posts {
-	return post.NewPosts(p.ID)
+func (p *Pipeline) Posts() *post.PipelinePosts {
+	return post.NewPipelinePosts(p.ID)
 }
 
 // IsFinished checks if the pipeline is still running by querying the state of

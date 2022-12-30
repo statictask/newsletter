@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/statictask/newsletter/internal/log"
-	"github.com/statictask/newsletter/pkg/pipeline"
 	"github.com/statictask/newsletter/pkg/project"
+	"github.com/statictask/newsletter/pkg/task"
 	"go.uber.org/zap"
 )
 
@@ -58,44 +58,28 @@ func (s *TaskScheduler) startTaskReconcileLoop(stop chan Signal) {
 					continue
 				}
 
-				for _, taskType := range pipeline.TaskTypes {
-					task, err := lastPipeline.Tasks().GetByType(pipeline.Scrape)
+				for _, taskType := range task.TaskTypes {
+					_log := log.L.With(
+						zap.Int64("project_id", p.ID),
+						zap.Int64("pipeline_id", lastPipeline.ID),
+						zap.Reflect("task_type", taskType),
+					)
+
+					t, err := lastPipeline.Tasks().GetByType(taskType)
 					if err != nil {
-						log.L.Error(
-							"failed loading pipeline task",
-							zap.Int64("project_id", p.ID),
-							zap.Int64("pipeline_id", lastPipeline.ID),
-							zap.Reflect("task_type", taskType),
-							zap.Error(err),
-						)
+						_log.Error("failed loading pipeline task", zap.Error(err))
 						continue
 					}
 
-					if task == nil {
-						log.L.Info(
-							"creating a new task",
-							zap.Int64("project_id", p.ID),
-							zap.Int64("pipeline_id", lastPipeline.ID),
-						)
+					if t == nil {
+						_log.Info("creating a new task")
 
-						task, err := lastPipeline.Tasks().Create(taskType)
+						t, err := lastPipeline.Tasks().Create(taskType)
 						if err != nil {
-							log.L.Error(
-								"failed creating new task",
-								zap.Int64("project_id", p.ID),
-								zap.Int64("pipeline_id", lastPipeline.ID),
-								zap.Reflect("task_type", taskType),
-								zap.Error(err),
-							)
+							_log.Error("failed creating new task", zap.Error(err))
 						}
 
-						log.L.Info(
-							"new task created",
-							zap.Int64("project_id", p.ID),
-							zap.Int64("pipeline_id", lastPipeline.ID),
-							zap.Reflect("task_type", task.Type),
-							zap.Error(err),
-						)
+						_log.Info("new task created", zap.Error(err), zap.Int64("task_id", t.ID))
 					}
 				}
 			}

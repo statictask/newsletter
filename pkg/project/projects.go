@@ -51,4 +51,3 @@ func (pp *Projects) Delete(projectID int64) error {
 func (pp *Projects) AllEnabled() ([]*Project, error) {
 	return pp.Where("is_enabled = true")
 }
-

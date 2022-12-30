@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/statictask/newsletter/pkg/pipeline"
+	"github.com/statictask/newsletter/pkg/post"
 	"github.com/statictask/newsletter/pkg/subscription"
 )
 
@@ -13,8 +14,8 @@ type Project struct {
 	Name      string    `json:"name"`
 	FeedURL   string    `json:"feed_url"`
 	IsEnabled bool      `json:"is_enabled"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 // New returns an empty Project
@@ -55,6 +56,12 @@ func (p *Project) Subscriptions() *subscription.Subscriptions {
 }
 
 // Pipelines return a lazy inteface for interacting with project's pipelines
-func (p *Project) Pipelines() *pipeline.Pipelines {
-	return pipeline.NewPipelines(p.ID)
+func (p *Project) Pipelines() *pipeline.ProjectPipelines {
+	return pipeline.NewProjectPipelines(p.ID)
+}
+
+// Posts returns a lazy interface for interacting with posts attached
+// to pipelines of the respective project
+func (p *Project) Posts() *post.ProjectPosts {
+	return post.NewProjectPosts(p.ID)
 }

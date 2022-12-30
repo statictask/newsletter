@@ -36,8 +36,8 @@ func insertPost(p *Post) error {
 	return nil
 }
 
-// getPost return a single row that matches a given expression
-func getPostWhere(expression string) (*Post, error) {
+// getPostByPipelineID return a single row that matches a given expression
+func getPostByPipelineID(pipelineID int64) (*Post, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return nil, err
@@ -45,11 +45,10 @@ func getPostWhere(expression string) (*Post, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT post_id,pipeline_id,content,created_at,updated_at FROM posts"
-
-	if expression != "" {
-		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
-	}
+	sqlStatement := fmt.Sprintf(
+		"SELECT post_id,pipeline_id,content,created_at,updated_at FROM posts WHERE pipeline_id=%d",
+		pipelineID,
+	)
 
 	row := db.QueryRow(sqlStatement)
 	p := &Post{}
@@ -61,9 +60,9 @@ func getPostWhere(expression string) (*Post, error) {
 	return p, nil
 }
 
-// getPosts returns all posts in the database based
+// getPostsByProjectID returns all posts in the database based
 // on a given expression
-func getPostsWhere(expression string) ([]*Post, error) {
+func getPostsByProjectID(projectID int64) ([]*Post, error) {
 	var ps []*Post
 
 	db, err := database.Connect()
@@ -73,11 +72,11 @@ func getPostsWhere(expression string) ([]*Post, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT post_id,pipeline_id,content,created_at,updated_at FROM posts"
-
-	if expression != "" {
-		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
-	}
+	sqlStatement := fmt.Sprintf(
+		`SELECT p.post_id, p.pipeline_id, p.content, p.created_at, p.updated_at FROM posts AS p
+		JOIN pipelines AS pl ON p.pipeline_id = pl.pipeline_id WHERE pl.project_id = %d`,
+		projectID,
+	)
 
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -100,69 +99,29 @@ func getPostsWhere(expression string) ([]*Post, error) {
 
 }
 
-// updatePost updates a Post in the database
-func updatePost(p *Post) error {
+// getLastPostByProjectID returns all posts in the database based
+// on a given expression
+func getLastPostByProjectID(projectID int64) (*Post, error) {
 	db, err := database.Connect()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer db.Close()
 
-	// only allows update to the post_status field, the other fields are immutable
-	sqlStatement := `UPDATE posts SET content WHERE post_id=$3`
-
-	res, err := db.Exec(sqlStatement, p.Content, p.ID)
-	if err != nil {
-		return fmt.Errorf(
-			"unable to execute `%s` with post_id `%d`: %v",
-			sqlStatement, p.ID, err,
-		)
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed checking the affected rows: %v", err)
-	}
-
-	log.L.Info(
-		"posts rows updated",
-		zap.Int64("total", rowsAffected),
-		zap.Int64("post_id", p.ID),
+	sqlStatement := fmt.Sprintf(
+		`SELECT p.post_id, p.pipeline_id, p.content, p.created_at, p.updated_at FROM posts AS p
+		JOIN pipelines AS pl ON p.pipeline_id = pl.pipeline_id WHERE pl.project_id = %d
+		ORDER BY p.created_at DESC LIMIT 1`,
+		projectID,
 	)
 
-	return nil
-}
+	row := db.QueryRow(sqlStatement)
+	p := &Post{}
 
-// deletePost deletes a Post record from database
-func deletePost(postID int64) error {
-	db, err := database.Connect()
-	if err != nil {
-		return err
+	if err := row.Scan(&p.ID, &p.PipelineID, &p.Content, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		return nil, fmt.Errorf("unable to scan post row: %v", err)
 	}
 
-	defer db.Close()
-
-	sqlStatement := `DELETE FROM posts WHERE post_id=$1`
-
-	res, err := db.Exec(sqlStatement, postID)
-	if err != nil {
-		return fmt.Errorf(
-			"unable to execute `%s` with post_id `%d`: %v",
-			sqlStatement, postID, err,
-		)
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed checking the affected rows: %v", err)
-	}
-
-	log.L.Info(
-		"post rows deleted",
-		zap.Int64("total", rowsAffected),
-		zap.Int64("post_id", postID),
-	)
-
-	return nil
+	return p, nil
 }

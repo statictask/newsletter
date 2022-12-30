@@ -1,4 +1,4 @@
-package pipeline
+package task
 
 import (
 	"fmt"
@@ -30,8 +30,8 @@ type Task struct {
 	PipelineID int64
 	Type       TaskType
 	Status     TaskStatus
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	CreatedAt  *time.Time
+	UpdatedAt  *time.Time
 }
 
 func NewTask() *Task {
@@ -51,15 +51,6 @@ func (t *Task) Create() error {
 func (t *Task) Update() error {
 	if err := updateTask(t); err != nil {
 		return fmt.Errorf("unable to update task: %v", err)
-	}
-
-	return nil
-}
-
-// Delete the Task from the database
-func (t *Task) Delete() error {
-	if err := deleteTask(t.ID); err != nil {
-		return fmt.Errorf("unable to delete task: %v", err)
 	}
 
 	return nil
