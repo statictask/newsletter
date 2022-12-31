@@ -57,6 +57,7 @@ func getPipelineWhere(expression string) (*Pipeline, error) {
 	return p, nil
 }
 
+
 // getLastPipeline return a single row that matches the last pipeline for a given project_id
 func getLastPipeline(projectID int64) (*Pipeline, error) {
 	db, err := database.Connect()
@@ -66,19 +67,16 @@ func getLastPipeline(projectID int64) (*Pipeline, error) {
 
 	defer db.Close()
 
-	sqlStatement := "SELECT pipeline_id,project_id,created_at,updated_at FROM pipelines ORDER BY created_at DESC LIMIT 1"
+	query := "SELECT pipeline_id,project_id,created_at,updated_at FROM pipelines ORDER BY created_at DESC LIMIT 1"
 
-	row := db.QueryRow(sqlStatement)
+	row := db.QueryRow(query)
 	p := &Pipeline{}
-	err = row.Scan(&p.ID, &p.ProjectID, &p.CreatedAt, &p.UpdatedAt)
-
-	if err != nil {
+	if err := row.Scan(&p.ID, &p.ProjectID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 		if err != sql.ErrNoRows {
 			return nil, fmt.Errorf("unable to scan pipeline row: %v", err)
 		}
 
 		return nil, nil
-
 	}
 
 	return p, nil

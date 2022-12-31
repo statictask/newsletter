@@ -1,7 +1,7 @@
 package task
 
 // PipelineTasks is the entity used for lazy controlling
-// interactions with many PipelineTasks in the database
+// interactions with many Tasks of the same pipeline
 type PipelineTasks struct {
 	pipelineID int64
 }

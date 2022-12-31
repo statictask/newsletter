@@ -39,27 +39,13 @@ func insertProject(p *Project) error {
 
 // getProjectWhere return a single row that matches a given expression
 func getProjectWhere(expression string) (*Project, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return nil, err
-	}
-
-	defer db.Close()
-
-	sqlStatement := "SELECT project_id,name,feed_url,is_enabled,created_at,updated_at FROM projects"
+	query := "SELECT project_id,name,feed_url,is_enabled,created_at,updated_at FROM projects"
 
 	if expression != "" {
-		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, expression)
+		query = fmt.Sprintf("%s WHERE %s", query, expression)
 	}
 
-	row := db.QueryRow(sqlStatement)
-	p := New()
-
-	if err := row.Scan(&p.ID, &p.Name, &p.FeedURL, &p.IsEnabled, &p.CreatedAt, &p.UpdatedAt); err != nil {
-		return nil, fmt.Errorf("unable to scan a project row: %v", err)
-	}
-
-	return p, nil
+	return scanProject(query)
 }
 
 // getProjects returns all projects in the database
@@ -157,6 +143,41 @@ func deleteProject(projectID int64) error {
 	log.L.Info("project rows deleted", zap.Int64("total", rowsAffected), zap.Int64("project_id", projectID))
 
 	return nil
+}
+
+// getProjectByTask
+func getProjectByTaskID(taskID int64) (*Project, error) {
+	query := fmt.Sprintf(
+		`SELECT pr.project_id, pr.name, pr.feed_url, pr.is_enabled, pr.created_at, pr.updated_at
+			FROM projects AS pr
+			JOIN pipelines AS pi
+				ON pr.project_id = pi.project_id
+			FULL OUTER JOIN tasks AS ta
+				ON ta.pipeline_id = pi.pipeline_id
+			WHERE ta.task_id=%d`,
+		taskID,
+	)
+
+	return scanProject(query)
+}
+
+// scanProject returns a single project based on the given query
+func scanProject(query string) (*Project, error) {
+	db, err := database.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow(query)
+	p := New()
+
+	if err := row.Scan(&p.ID, &p.Name, &p.FeedURL, &p.IsEnabled, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		return nil, fmt.Errorf("unable to scan a project row: %v", err)
+	}
+
+	return p, nil
 }
 
 // loadProject is a helper function that receives an string with the

@@ -1,6 +1,7 @@
 package post
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/statictask/newsletter/internal/database"
@@ -17,7 +18,7 @@ func insertPost(p *Post) error {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO posts (pipeline_id,content) VALUES ($1) RETURNING post_id,created_at,updated_at`
+	sqlStatement := `INSERT INTO posts (pipeline_id,content) VALUES ($1,$2) RETURNING post_id,created_at,updated_at`
 
 	if err := db.QueryRow(
 		sqlStatement,
@@ -34,30 +35,6 @@ func insertPost(p *Post) error {
 	)
 
 	return nil
-}
-
-// getPostByPipelineID return a single row that matches a given expression
-func getPostByPipelineID(pipelineID int64) (*Post, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return nil, err
-	}
-
-	defer db.Close()
-
-	sqlStatement := fmt.Sprintf(
-		"SELECT post_id,pipeline_id,content,created_at,updated_at FROM posts WHERE pipeline_id=%d",
-		pipelineID,
-	)
-
-	row := db.QueryRow(sqlStatement)
-	p := &Post{}
-
-	if err := row.Scan(&p.ID, &p.PipelineID, &p.Content, &p.CreatedAt, &p.UpdatedAt); err != nil {
-		return nil, fmt.Errorf("unable to scan post row: %v", err)
-	}
-
-	return p, nil
 }
 
 // getPostsByProjectID returns all posts in the database based
@@ -99,9 +76,31 @@ func getPostsByProjectID(projectID int64) ([]*Post, error) {
 
 }
 
+// getPostByPipelineID return a single row that matches a given expression
+func getPostByPipelineID(pipelineID int64) (*Post, error) {
+	query := fmt.Sprintf(
+		"SELECT post_id,pipeline_id,content,created_at,updated_at FROM posts WHERE pipeline_id=%d",
+		pipelineID,
+	)
+
+	return scanPost(query)
+}
+
 // getLastPostByProjectID returns all posts in the database based
 // on a given expression
 func getLastPostByProjectID(projectID int64) (*Post, error) {
+	query := fmt.Sprintf(
+		`SELECT p.post_id, p.pipeline_id, p.content, p.created_at, p.updated_at FROM posts AS p
+		JOIN pipelines AS pl ON p.pipeline_id = pl.pipeline_id WHERE pl.project_id = %d
+		ORDER BY p.created_at DESC LIMIT 1`,
+		projectID,
+	)
+
+	return scanPost(query)
+}
+
+// scanPost returns a single post based on the given query
+func scanPost(query string) (*Post, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return nil, err
@@ -109,18 +108,15 @@ func getLastPostByProjectID(projectID int64) (*Post, error) {
 
 	defer db.Close()
 
-	sqlStatement := fmt.Sprintf(
-		`SELECT p.post_id, p.pipeline_id, p.content, p.created_at, p.updated_at FROM posts AS p
-		JOIN pipelines AS pl ON p.pipeline_id = pl.pipeline_id WHERE pl.project_id = %d
-		ORDER BY p.created_at DESC LIMIT 1`,
-		projectID,
-	)
-
-	row := db.QueryRow(sqlStatement)
+	row := db.QueryRow(query)
 	p := &Post{}
 
 	if err := row.Scan(&p.ID, &p.PipelineID, &p.Content, &p.CreatedAt, &p.UpdatedAt); err != nil {
-		return nil, fmt.Errorf("unable to scan post row: %v", err)
+		if err != sql.ErrNoRows {
+			return nil, fmt.Errorf("unable to scan post row: %v", err)
+		}
+
+		return nil, nil
 	}
 
 	return p, nil

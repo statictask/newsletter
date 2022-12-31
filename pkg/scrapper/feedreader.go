@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
+	"github.com/statictask/newsletter/internal/log"
+	"go.uber.org/zap"
 )
 
 type FeedReader struct {
@@ -19,7 +21,7 @@ type FeedItem struct {
 	PubDate     *time.Time
 }
 
-func New(url string) *FeedReader {
+func NewFeedReader(url string) *FeedReader {
 	return &FeedReader{url}
 }
 
@@ -33,6 +35,7 @@ func (fr *FeedReader) ReadFrom(ctx context.Context, dateLimit *time.Time) ([]*Fe
 	}
 
 	for _, i := range feed.Items {
+		log.L.Info("processing feed item", zap.String("item_guid", i.GUID))
 		if i.PublishedParsed.After(*dateLimit) {
 			item := &FeedItem{
 				Title:       i.Title,
@@ -47,4 +50,20 @@ func (fr *FeedReader) ReadFrom(ctx context.Context, dateLimit *time.Time) ([]*Fe
 	}
 
 	return items, nil
+}
+
+func (fi *FeedItem) GetTitle() string {
+	return fi.Title
+}
+
+func (fi *FeedItem) GetContent() string {
+	if fi.Content == "" {
+		return fi.Description
+	}
+
+	return fi.Content
+}
+
+func (fi *FeedItem) GetLink() string {
+	return fi.Link
 }
