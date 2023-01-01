@@ -21,7 +21,13 @@ func insertPipeline(p *Pipeline) error {
 		  updated_at
 	`
 
-	_, err := scanPipeline(query, p.ProjectID)
+	savedPipeline, err := scanPipeline(query, p.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	*p = *savedPipeline
+
 	return err
 }
 
@@ -35,32 +41,33 @@ func getLastPipeline(projectID int64) (*Pipeline, error) {
 		  updated_at
 		FROM
 		  pipelines
+		WHERE
+		  project_id = $1
 		ORDER BY
 		  created_at
 		DESC
 		LIMIT 1
 	`
-	return scanPipeline(query)
+	return scanPipeline(query, projectID)
 }
 
 // getPipelinesByProjectID returns all pipelines in the database based
 // on a given expression
 func getPipelinesByProjectID(projectID int64) ([]*Pipeline, error) {
-	template := `
+	query := `
 		SELECT 
 		  pipeline_id,project_id,created_at,updated_at
 		FROM
 		  pipelines
 		WHERE
-		  project_id = %d
+		  project_id = $1
 	`
 
-	query := fmt.Sprintf(template, projectID)
-	return scanPipelines(query)
+	return scanPipelines(query, projectID)
 }
 
 // scanPipelines returns multiple pipelines that match the given query
-func scanPipelines(query string) ([]*Pipeline, error) {
+func scanPipelines(query string, params ...interface{}) ([]*Pipeline, error) {
 	var ps []*Pipeline
 
 	db, err := database.Connect()
@@ -70,7 +77,7 @@ func scanPipelines(query string) ([]*Pipeline, error) {
 
 	defer db.Close()
 
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, params...)
 	if err != nil {
 		return ps, fmt.Errorf("unable to execute `%s`: %v", query, err)
 	}

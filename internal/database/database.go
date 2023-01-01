@@ -63,3 +63,24 @@ func Ping() error {
 
 	return nil
 }
+
+// Exec executes a single query in the database
+func Exec(query string, params ...interface{}) error {
+	db, err := Connect()
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	res, err := db.Exec(query, params...)
+	if err != nil {
+		return fmt.Errorf("unable to execute query '%s' with params '%v': %v", query, params, err)
+	}
+
+	if _, err = res.RowsAffected(); err != nil {
+		return fmt.Errorf("failed checking the affected rows: %v", err)
+	}
+
+	return nil
+}

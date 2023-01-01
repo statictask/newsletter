@@ -26,14 +26,20 @@ func insertPost(p *Post) error {
 		  updated_at
 	`
 
-	_, err := scanPost(query, p.PipelineID, p.Content)
-	return err
+	savedPost, err := scanPost(query, p.PipelineID, p.Content)
+	if err != nil {
+		return err
+	}
+
+	*p = *savedPost
+
+	return nil
 }
 
 // getPostsByProjectID returns all posts in the database based
 // on a given expression
 func getPostsByProjectID(projectID int64) ([]*Post, error) {
-	template := `
+	query := `
 		SELECT
 		  p.post_id,
 		  p.pipeline_id,
@@ -45,16 +51,15 @@ func getPostsByProjectID(projectID int64) ([]*Post, error) {
 		JOIN pipelines AS pl
 		  ON p.pipeline_id = pl.pipeline_id
 		WHERE
-		  pl.project_id = %d
+		  pl.project_id = $1
 	`
 
-	query := fmt.Sprintf(template, projectID)
-	return scanPosts(query)
+	return scanPosts(query, projectID)
 }
 
 // getPostByPipelineID return a single row that matches a given expression
 func getPostByPipelineID(pipelineID int64) (*Post, error) {
-	template := `
+	query := `
 		SELECT
 		  post_id,
 		  pipeline_id,
@@ -64,18 +69,16 @@ func getPostByPipelineID(pipelineID int64) (*Post, error) {
 		FROM
 		  posts
 		WHERE
-		  pipeline_id = %d
+		  pipeline_id = $1
 	`
 
-	query := fmt.Sprintf(template, pipelineID)
-
-	return scanPost(query)
+	return scanPost(query, pipelineID)
 }
 
 // getLastPostByProjectID returns all posts in the database based
 // on a given expression
 func getLastPostByProjectID(projectID int64) (*Post, error) {
-	template := `
+	query := `
 		SELECT
 		  p.post_id,
 		  p.pipeline_id,
@@ -87,15 +90,14 @@ func getLastPostByProjectID(projectID int64) (*Post, error) {
 		JOIN pipelines AS pl
 		  ON p.pipeline_id = pl.pipeline_id
 		WHERE
-		  pl.project_id = %d
+		  pl.project_id = $1
 		ORDER BY
 		  p.created_at
 		DESC
 		LIMIT 1
 	`
-	query := fmt.Sprintf(template, projectID)
 
-	return scanPost(query)
+	return scanPost(query, projectID)
 }
 
 // scanPost returns a single post based on the given query
@@ -122,7 +124,7 @@ func scanPost(query string, params ...interface{}) (*Post, error) {
 }
 
 // scanPosts returns multiple posts based on the given query
-func scanPosts(query string) ([]*Post, error) {
+func scanPosts(query string, params ...interface{}) ([]*Post, error) {
 	var ps []*Post
 
 	db, err := database.Connect()
@@ -132,7 +134,7 @@ func scanPosts(query string) ([]*Post, error) {
 
 	defer db.Close()
 
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, params...)
 	if err != nil {
 		return ps, fmt.Errorf("unable to execute `%s`: %v", query, err)
 	}

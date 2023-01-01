@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/statictask/newsletter/pkg/project"
+	"github.com/statictask/newsletter/pkg/subscription"
 )
 
 var (
@@ -32,18 +33,17 @@ func (s *Server) Listen(bind string) error {
 	router := mux.NewRouter()
 
 	// projects routes
-	router.HandleFunc("/projects", project.GetProjects).Methods("GET")
 	router.HandleFunc("/projects", project.CreateProject).Methods("POST")
 	router.HandleFunc("/projects/{project_id}", project.GetProject).Methods("GET")
 	router.HandleFunc("/projects/{project_id}", project.DeleteProject).Methods("DELETE")
 	router.HandleFunc("/projects/{project_id}", project.UpdateProject).Methods("UPDATE")
 
 	// subscription routes
-	router.HandleFunc("/projects/{project_id}/subscriptions", project.GetProjectSubscriptions).Methods("GET")
-	router.HandleFunc("/projects/{project_id}/subscriptions", project.CreateProjectSubscription).Methods("POST")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", project.GetProjectSubscription).Methods("GET")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", project.DeleteProjectSubscription).Methods("DELETE")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", project.UpdateProjectSubscription).Methods("UPDATE")
+	router.HandleFunc("/projects/{project_id}/subscriptions", subscription.GetProjectSubscriptions).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/subscriptions", subscription.CreateProjectSubscription).Methods("POST")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.GetProjectSubscription).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.DeleteProjectSubscription).Methods("DELETE")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.UpdateProjectSubscription).Methods("UPDATE")
 
 	s.L.With(zap.String("bind", bind)).Info("listening")
 

@@ -10,10 +10,10 @@ import (
 )
 
 type Project struct {
-	ID        int64     `json:"project_id"`
-	Name      string    `json:"name"`
-	FeedURL   string    `json:"feed_url"`
-	IsEnabled bool      `json:"is_enabled"`
+	ID        int64      `json:"project_id"`
+	Name      string     `json:"name"`
+	FeedURL   string     `json:"feed_url"`
+	IsEnabled bool       `json:"is_enabled"`
 	CreatedAt *time.Time `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
@@ -51,8 +51,8 @@ func (p *Project) Delete() error {
 }
 
 // Subscriptions return a lazy inteface for interacting with project's subscriptions
-func (p *Project) Subscriptions() *subscription.Subscriptions {
-	return subscription.NewSubscriptions(p.ID)
+func (p *Project) Subscriptions() *subscription.ProjectSubscriptions {
+	return subscription.NewProjectSubscriptions(p.ID)
 }
 
 // Pipelines return a lazy inteface for interacting with project's pipelines
