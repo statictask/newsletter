@@ -11,7 +11,7 @@ func NewPipelinePosts(pipelineID int64) *PipelinePosts {
 	return &PipelinePosts{pipelineID}
 }
 
-// Get returns the only post attached to the pipeline
-func (ps *PipelinePosts) Get() (*Post, error) {
+// Last returns the only post attached to the pipeline
+func (ps *PipelinePosts) Last() (*Post, error) {
 	return getPostByPipelineID(ps.pipelineID)
 }

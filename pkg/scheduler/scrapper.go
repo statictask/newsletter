@@ -10,6 +10,6 @@ func NewScrapperJobScheduler() *ScrapperJobScheduler {
 
 // Start creates a go routine to reconcile pipeline's tasks
 func (s *ScrapperJobScheduler) Start() {
-	job := scrapper.NewScrapperJob()
+	job := scrapper.New()
 	go job.Run()
 }

@@ -12,30 +12,30 @@ import (
 	"go.uber.org/zap"
 )
 
-type ScrapperJob struct{}
+type Scrapper struct{}
 
-func NewScrapperJob() *ScrapperJob {
-	return &ScrapperJob{}
+func New() *Scrapper {
+	return &Scrapper{}
 }
 
 // Run checks if there are new items published in the feed since the last
 // finished pipeline. If so, it'll get these items and create a post with
 // the new content in the database
-func (s *ScrapperJob) Run() {
+func (s *Scrapper) Run() {
 	for {
 		time.Sleep(10 * time.Second)
 
 		if err := s.processWaitingTasks(); err != nil {
-			log.L.Error("failed processing waiting tasks", zap.Error(err))
+			log.L.Error("failed processing scrape waiting tasks", zap.Error(err))
 		}
 
 		if err := s.processReadyTasks(); err != nil {
-			log.L.Error("failed processing ready tasks", zap.Error(err))
+			log.L.Error("failed processing scrape ready tasks", zap.Error(err))
 		}
 	}
 }
 
-func (s *ScrapperJob) processWaitingTasks() error {
+func (s *Scrapper) processWaitingTasks() error {
 	ctl := task.NewTasks()
 	tasks, err := ctl.Filter(task.Scrape, task.Waiting)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *ScrapperJob) processWaitingTasks() error {
 	return nil
 }
 
-func (s *ScrapperJob) processReadyTasks() error {
+func (s *Scrapper) processReadyTasks() error {
 	ctl := task.NewTasks()
 	tasks, err := ctl.Filter(task.Scrape, task.Ready)
 	if err != nil {
@@ -80,14 +80,15 @@ func (s *ScrapperJob) processReadyTasks() error {
 
 		// if there are no posts, we're going to use the UpdatedAt field
 		// of the project sync further posts
+		isFirst := true
 		lastPubDate := taskProject.UpdatedAt
-
 		if lastPost != nil {
+			isFirst = false
 			lastPubDate = lastPost.UpdatedAt
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		items, err := feedReader.ReadFrom(ctx, lastPubDate)
+		items, err := feedReader.ReadFrom(ctx, lastPubDate, isFirst)
 		cancel()
 
 		_log := log.L.With(zap.Int64("task_id", t.ID), zap.String("feed_url", feedURL))
