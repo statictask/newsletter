@@ -12,7 +12,7 @@ func insertPost(p *Post) error {
 	query := `
 		INSERT INTO posts (
 		  pipeline_id,
-		  content
+		  title
 	        )
 		VALUES (
 		  $1,
@@ -21,12 +21,12 @@ func insertPost(p *Post) error {
 		RETURNING
 		  post_id,
 		  pipeline_id,
-		  content,
+		  title,
 		  created_at,
 		  updated_at
 	`
 
-	savedPost, err := scanPost(query, p.PipelineID, p.Content)
+	savedPost, err := scanPost(query, p.PipelineID, p.Title)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func getPostsByProjectID(projectID int64) ([]*Post, error) {
 		SELECT
 		  p.post_id,
 		  p.pipeline_id,
-		  p.content,
+		  p.title,
 		  p.created_at,
 		  p.updated_at
 		FROM
@@ -63,7 +63,7 @@ func getPostByPipelineID(pipelineID int64) (*Post, error) {
 		SELECT
 		  post_id,
 		  pipeline_id,
-		  content,
+		  title,
 		  created_at,
 		  updated_at
 		FROM
@@ -82,7 +82,7 @@ func getLastPostByProjectID(projectID int64) (*Post, error) {
 		SELECT
 		  p.post_id,
 		  p.pipeline_id,
-		  p.content,
+		  p.title,
 		  p.created_at,
 		  p.updated_at
 		FROM
@@ -112,7 +112,7 @@ func scanPost(query string, params ...interface{}) (*Post, error) {
 	row := db.QueryRow(query, params...)
 	p := &Post{}
 
-	if err := row.Scan(&p.ID, &p.PipelineID, &p.Content, &p.CreatedAt, &p.UpdatedAt); err != nil {
+	if err := row.Scan(&p.ID, &p.PipelineID, &p.Title, &p.CreatedAt, &p.UpdatedAt); err != nil {
 		if err != sql.ErrNoRows {
 			return nil, fmt.Errorf("unable to scan post row: %v", err)
 		}
@@ -144,7 +144,7 @@ func scanPosts(query string, params ...interface{}) ([]*Post, error) {
 	for rows.Next() {
 		p := New()
 
-		if err := rows.Scan(&p.ID, &p.PipelineID, &p.Content, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.PipelineID, &p.Title, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return ps, fmt.Errorf("unable to scan post row: %v", err)
 		}
 

@@ -1,0 +1,16 @@
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS post_items (
+	post_item_id SERIAL PRIMARY KEY,  
+	post_id INTEGER REFERENCES posts (post_id) ON DELETE CASCADE NOT NULL,
+	title TEXT NOT NULL,
+	link VARCHAR (300) NOT NULL,
+	content TEXT NOT NULL,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+SELECT db_manage_updated_at('post_items');
+
+COMMIT;
+

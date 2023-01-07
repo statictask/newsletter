@@ -3,19 +3,31 @@ package mailer
 import (
 	"time"
 	"fmt"
+	"context"
 
 	"go.uber.org/zap"
 
 	"github.com/statictask/newsletter/pkg/task"
 	"github.com/statictask/newsletter/pkg/post"
 	"github.com/statictask/newsletter/pkg/project"
+	"github.com/statictask/newsletter/pkg/subscription"
 	"github.com/statictask/newsletter/internal/log"
 )
 
-type Mailer struct{}
+type EmailSender interface {
+	Send (ctx context.Context, tm *TargetEmail) error
+}
 
-func New() *Mailer {
-	return &Mailer{}
+type Mailer struct {
+	sender EmailSender
+}
+
+func New(name, address, key string) *Mailer {
+	// define mail shipper
+	addr := NewEmailAddress(name, address)
+	shipper := NewShipper(addr, key)
+
+	return &Mailer{shipper}
 }
 
 // Run executes an infinite loop that keeps checking if there are
@@ -80,12 +92,6 @@ func (m *Mailer) processReadyTasks() error {
 		return err
 	}
 
-	// define mail shipper
-	server := "email.statictask.io"
-	user := "statictask"
-	password := "statictask"
-	shipper := NewShipper(server, user, password)
-
 	for _, t := range tasks {
 		_log := log.L.With(
 			zap.Int64("task_id", t.ID),
@@ -124,20 +130,7 @@ func (m *Mailer) processReadyTasks() error {
 		for _, s := range subscriptions {
 			__log := _log.With(zap.Int64("subscription_id", s.ID))
 
-			// create email
-			from := "newsletter@statictask.io"
-			to := s.Email
-			subject := fmt.Sprintf("[Newsletter] %s", taskProject.Name)
-			content := relatedPost.Content
-
-			mail := NewMail(from, to, subject, content)
-
-			// send email
-			// todo: use primes to check which emails were already sent in case of failure
-			// the idea is to associate a prime with each subscription and use it in a simple
-			// function to track which subscribers already received the email in the case we
-			// need to re-process everything
-			if err := shipper.Send(mail); err != nil {
+			if err := m.sendEmail(s, relatedPost); err != nil {
 				__log.Error("failed sending email", zap.Error(err))
 				continue
 			}
@@ -170,4 +163,14 @@ func (m *Mailer) processReadyTasks() error {
 	}
 
 	return nil
+}
+
+func (m *Mailer) sendEmail(s *subscription.Subscription, p *post.Post) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	// create email
+	mail := NewTargetEmail(s, p)
+
+	return m.sender.Send(ctx, mail)
 }

@@ -1,23 +1,22 @@
 package post
 
-import "fmt"
+import (
 
-type ContentItem interface {
-	GetTitle() string
-	GetContent() string
-	GetLink() string
-}
+	"fmt"
 
-type Content struct {
+	"github.com/statictask/newsletter/pkg/postitem"
+)
+
+type ContentBuilder struct {
 	title string
-	items []ContentItem
+	items []*postitem.PostItem
 }
 
-func NewContent(title string, items []ContentItem) *Content {
-	return &Content{title, items}
+func NewContentBuilder(title string, items []*postitem.PostItem) *ContentBuilder {
+	return &ContentBuilder{title, items}
 }
 
-func (c *Content) Build() (string, error) {
+func (c *ContentBuilder) BuildHTML() (string, error) {
 	if len(c.items) == 0 {
 		return "", fmt.Errorf("empty list of content items to build")
 	}
@@ -33,17 +32,38 @@ func (c *Content) Build() (string, error) {
 	for _, i := range c.items {
 		body = body +
 			"    <hr>\n" +
-			"    <a href=\"" + i.GetLink() + "\">\n" +
-			"      <h3>" + i.GetTitle() + "</h3>\n" +
+			"    <a href=\"" + i.Link + "\">\n" +
+			"      <h3>" + i.Title + "</h3>\n" +
 			"    </a>\n" +
 			"    <br>\n" +
-			"    <p>" + i.GetContent() + "</p>\n"
+			"    <p>" + i.Content + "</p>\n"
 	}
 
 	body = body +
 		"    <br><br>\n" +
 		"  </body>\n" +
 		"</html>\n"
+
+	return body, nil
+}
+
+func (c *ContentBuilder) BuildPlainText() (string, error) {
+	if len(c.items) == 0 {
+		return "", fmt.Errorf("empty list of content items to build")
+	}
+
+	body := c.title
+
+	for _, i := range c.items {
+		body = body +
+			"\n\n" +
+			i.Title +
+			"\n" +
+			i.Content +
+			"\n" +
+			i.Link +
+			"\n"
+	}
 
 	return body, nil
 }

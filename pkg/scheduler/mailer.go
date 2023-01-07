@@ -9,7 +9,7 @@ func NewMailerJobScheduler() *MailerJobScheduler {
 }
 
 // Start creates a go routine to reconcile pipeline's tasks
-func (s *MailerJobScheduler) Start() {
-	job := mailer.New()
+func (s *MailerJobScheduler) Start(name, address, key string) {
+	job := mailer.New(name, address, key)
 	go job.Run()
 }

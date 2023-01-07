@@ -39,13 +39,17 @@ var (
 	cfgFile, logLevel, logFormat string
 )
 
-var defaults = map[string]string{
+var defaults = map[string]interface{}{
 	"POSTGRES_USERNAME": "newsletter",
 	"POSTGRES_PASSWORD": "newsletter",
 	"POSTGRES_HOST":     "localhost",
 	"POSTGRES_PORT":     "5432",
 	"POSTGRES_DATABASE": "newsletter",
 	"BIND_ADDRESS":      "127.0.0.1:8080",
+	"ALLOW_PREVIOUS_PUBLICATIONS": true,
+	"SENDGRID_API_KEY": "CHANGEME",
+	"SENDGRID_USER_EMAIL": "text@example.com",
+	"SENDGRID_USER_NAME": "Example User",
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -134,16 +138,34 @@ func initLogger() {
 
 // getEnvOrDefault returns the environment variable
 // value returned by viper or the hardcoded default
-func getEnvOrDefault(key string) string {
+func getEnvOrDefault(key string) interface{} {
 	defaultValue, ok := defaults[key]
 	if !ok {
 		logger.Fatal(fmt.Sprintf("default environment variable %s doesn't exist", key))
 	}
 
-	v := viper.GetString(strings.ToLower(key))
-	if v == "" {
-		v = defaultValue
+	v := viper.Get(strings.ToLower(key))
+	if v == nil {
+		return defaultValue
 	}
 
 	return v
+}
+
+// getEnvOrDefaultInt64 returns the environment variable
+// value returned by viper or the hardcoded default
+func getEnvOrDefaultInt64(key string) int64 {
+	return getEnvOrDefault(key).(int64)
+}
+
+// getEnvOrDefaultBool returns the environment variable
+// value returned by viper or the hardcoded default
+func getEnvOrDefaultBool(key string) bool {
+	return getEnvOrDefault(key).(bool)
+}
+
+// getEnvOrDefaultString returns the environment variable
+// value returned by viper or the hardcoded default
+func getEnvOrDefaultString(key string) string {
+	return getEnvOrDefault(key).(string)
 }

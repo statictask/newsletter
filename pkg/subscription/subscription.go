@@ -44,3 +44,13 @@ func (s *Subscription) Delete() error {
 
 	return nil
 }
+
+// GetName returns the Email
+func (s *Subscription) GetName() string {
+	return s.Email
+}
+
+// GetAddress returns the Email
+func (s *Subscription) GetAddress() string {
+	return s.Email
+}

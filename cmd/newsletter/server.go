@@ -50,11 +50,11 @@ func startServer(cmd *cobra.Command, args []string) {
 
 func initDB(cmd *cobra.Command, args []string) {
 	database.Init(
-		getEnvOrDefault("POSTGRES_HOST"),
-		getEnvOrDefault("POSTGRES_PORT"),
-		getEnvOrDefault("POSTGRES_DATABASE"),
-		getEnvOrDefault("POSTGRES_USERNAME"),
-		getEnvOrDefault("POSTGRES_PASSWORD"),
+		getEnvOrDefaultString("POSTGRES_HOST"),
+		getEnvOrDefaultString("POSTGRES_PORT"),
+		getEnvOrDefaultString("POSTGRES_DATABASE"),
+		getEnvOrDefaultString("POSTGRES_USERNAME"),
+		getEnvOrDefaultString("POSTGRES_PASSWORD"),
 	)
 
 	if err := database.Ping(); err != nil {
@@ -72,10 +72,14 @@ func initSchedulers(cmd *cobra.Command, args []string) {
 	ts.Start()
 
 	ss := scheduler.NewScrapperJobScheduler()
-	ss.Start()
+	ss.Start(getEnvOrDefaultBool("ALLOW_PREVIOUS_PUBLICATIONS"))
 
 	sm := scheduler.NewMailerJobScheduler()
-	sm.Start()
+	sm.Start(
+		getEnvOrDefaultString("SENDGRID_USER_NAME"),
+		getEnvOrDefaultString("SENDGRID_USER_EMAIL"),
+		getEnvOrDefaultString("SENDGRID_API_KEY"),
+	)
 }
 
 func initServer(cmd *cobra.Command, args []string) {
@@ -85,7 +89,7 @@ func initServer(cmd *cobra.Command, args []string) {
 	}
 
 	if bind == "" {
-		bind = getEnvOrDefault("BIND_ADDRESS")
+		bind = getEnvOrDefaultString("BIND_ADDRESS")
 	}
 
 	s := server.New()

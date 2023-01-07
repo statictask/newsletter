@@ -10,6 +10,8 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mmcdole/gofeed v1.1.3
+	github.com/sendgrid/rest v2.6.9+incompatible
+	github.com/sendgrid/sendgrid-go v3.12.0+incompatible
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	go.uber.org/zap v1.21.0

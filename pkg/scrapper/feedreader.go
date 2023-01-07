@@ -9,8 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var allowOldPosts bool = true
-
 type FeedReader struct {
 	FeedURL string
 }
@@ -27,7 +25,7 @@ func NewFeedReader(url string) *FeedReader {
 	return &FeedReader{url}
 }
 
-func (fr *FeedReader) ReadFrom(ctx context.Context, dateLimit *time.Time, isFirst bool) ([]*FeedItem, error) {
+func (fr *FeedReader) ReadFrom(ctx context.Context, dateLimit *time.Time, isFirst, allowPreviousPublications bool) ([]*FeedItem, error) {
 	items := []*FeedItem{}
 
 	fp := gofeed.NewParser()
@@ -38,7 +36,7 @@ func (fr *FeedReader) ReadFrom(ctx context.Context, dateLimit *time.Time, isFirs
 
 	for _, i := range feed.Items {
 		log.L.Info("processing feed item", zap.String("item_guid", i.GUID))
-		if i.PublishedParsed.After(*dateLimit) || (isFirst && allowOldPosts) {
+		if i.PublishedParsed.After(*dateLimit) || (isFirst && allowPreviousPublications) {
 			item := &FeedItem{
 				Title:       i.Title,
 				Description: i.Description,
