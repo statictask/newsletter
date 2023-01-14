@@ -13,11 +13,12 @@ import (
 )
 
 type Scrapper struct {
+	MinScrapeInterval time.Duration
 	AllowPreviousPublications bool
 }
 
-func New(allowPreviousPublications bool) *Scrapper {
-	return &Scrapper{allowPreviousPublications}
+func New(minScrapeInterval time.Duration, allowPreviousPublications bool) *Scrapper {
+	return &Scrapper{minScrapeInterval, allowPreviousPublications}
 }
 
 // Run checks if there are new items published in the feed since the last
@@ -45,6 +46,29 @@ func (s *Scrapper) processWaitingTasks() error {
 	}
 
 	for _, t := range tasks {
+		_log := log.L.With(zap.Int64("task_id", t.ID))
+
+		taskProject, err := project.NewProjects().GetByTaskID(t.ID)
+		if err != nil {
+			_log.Error("failed getting the project of the task", zap.Error(err))
+			continue
+		}
+
+		lastPost, err := taskProject.Posts().Last()
+		if err != nil {
+			_log.Error("failed getting the last post of project the project", zap.Error(err))
+			continue
+		}
+
+		// Respect the minimum scrape interval just in case there
+		// are previous posts already processed.
+		//
+		// TODO: Check if the last post was published
+		if lastPost != nil && lastPost.CreatedAt.Add(s.MinScrapeInterval).After(time.Now()) {
+			_log.Info("waiting for scrape interval", zap.Int64("last_post_id", lastPost.ID))
+			continue
+		}			
+
 		t.Status = task.Ready
 		if err := t.Update(); err != nil {
 			log.L.Error("failed getting task ready", zap.Error(err), zap.Int64("task_id", t.ID))
@@ -85,7 +109,7 @@ func (s *Scrapper) processReadyTasks() error {
 		lastPubDate := taskProject.UpdatedAt
 		if lastPost != nil {
 			isFirst = false
-			lastPubDate = lastPost.UpdatedAt
+			lastPubDate = &lastPost.UpdatedAt
 		}
 
 		_log := log.L.With(zap.Int64("task_id", t.ID), zap.String("feed_url", feedURL))
@@ -146,9 +170,9 @@ func (s *Scrapper) processReadyTasks() error {
 }
 
 func (s *Scrapper) readFeed(url string, lastPubDate *time.Time, isFirst bool) ([]*FeedItem, error) {
-	feedReader := NewFeedReader(url)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
+	feedReader := NewFeedReader(url)
 	return feedReader.ReadFrom(ctx, lastPubDate, isFirst, s.AllowPreviousPublications)
 }

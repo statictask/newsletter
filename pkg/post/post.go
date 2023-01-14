@@ -11,8 +11,8 @@ type Post struct {
 	ID         int64
 	PipelineID int64
 	Title      string
-	CreatedAt  *time.Time
-	UpdatedAt  *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 func New() *Post {

@@ -72,7 +72,10 @@ func initSchedulers(cmd *cobra.Command, args []string) {
 	ts.Start()
 
 	ss := scheduler.NewScrapperJobScheduler()
-	ss.Start(getEnvOrDefaultBool("ALLOW_PREVIOUS_PUBLICATIONS"))
+	ss.Start(
+		getEnvOrDefaultDuration("MIN_SCRAPE_INTERVAL"),
+		getEnvOrDefaultBool("ALLOW_PREVIOUS_PUBLICATIONS"),
+	)
 
 	sm := scheduler.NewMailerJobScheduler()
 	sm.Start(

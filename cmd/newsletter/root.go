@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -50,6 +51,7 @@ var defaults = map[string]interface{}{
 	"SENDGRID_API_KEY": "CHANGEME",
 	"SENDGRID_USER_EMAIL": "text@example.com",
 	"SENDGRID_USER_NAME": "Example User",
+	"MIN_SCRAPE_INTERVAL": "168h",  // 7 days
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -168,4 +170,15 @@ func getEnvOrDefaultBool(key string) bool {
 // value returned by viper or the hardcoded default
 func getEnvOrDefaultString(key string) string {
 	return getEnvOrDefault(key).(string)
+}
+
+// getEnvOrDefaultDuration returns the environment variable
+// value returned by viper or the hardcoded default
+func getEnvOrDefaultDuration(key string) time.Duration {
+	duration, err := time.ParseDuration(getEnvOrDefault(key).(string))
+	if err != nil {
+		log.L.Fatal("failed parsing duration", zap.Error(err))
+	}
+
+	return duration
 }
