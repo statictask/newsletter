@@ -44,6 +44,10 @@ func (s *Server) Listen(bind string) error {
 	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.GetProjectSubscription).Methods("GET")
 	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.DeleteProjectSubscription).Methods("DELETE")
 	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.UpdateProjectSubscription).Methods("UPDATE")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}/encrypt", subscription.GetSubscriptionEncryption).Methods("GET")
+	router.HandleFunc("/unsubscribe", subscription.GetUnsubscribePage).Queries("token", "{token}").Methods("GET")
+	router.HandleFunc("/unsubscribe", subscription.DeleteUnsubscribe).Queries("token", "{token}").Methods("DELETE")
+	router.HandleFunc("/goodbye", subscription.GetGoodbyePage).Methods("GET")
 
 	s.L.With(zap.String("bind", bind)).Info("listening")
 

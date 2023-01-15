@@ -68,7 +68,7 @@ func getSubscription(projectID, subscriptionID int64) (*Subscription, error) {
 		  subscriptions
 		WHERE
 		  project_id = $1
-		  subscription_id = $2
+		  AND subscription_id = $2
 	`
 
 	return scanSubscription(query, projectID, subscriptionID)

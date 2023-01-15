@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unsubscribe</title>
+  <style>
+    /* Add some modern CSS styles here */
+    body {
+      background-color: #f1f1f1;
+      font-family: Arial, sans-serif;
+    }
+
+    .unsubscribe-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #333333;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #666666;
+      margin-bottom: 30px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    input[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #45a049;
+    }
+
+    .notification {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 10px;
+      text-align: center;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: #fff;
+      transition: all 0.5s ease-in-out;
+      opacity: 0;
+    }
+
+    .notification.show {
+      opacity: 1;
+    }
+
+    .error {
+      background-color: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="unsubscribe-container">
+    <h1>Goodbye</h1>
+    <p>We're sorry to see you go.</p>
+    <form method="DELETE" action="/unsubscribe?token={{ .token }}">
+	    <input type="submit" value="Unsubscribe {{ .email }}">
+    </form>
+  </div>
+  <div class="notification"></div>
+  <script>
+    const form = document.querySelector('form');
+    const token = "{{ .token }}"
+    const notification = document.querySelector('.notification');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+	      const res = await fetch(`/unsubscribe?token=${token}`, {
+          method: 'DELETE',
+        });
+        if (res.status === 204) {
+          notification.innerHTML = 'Deletion was successful';
+          notification.classList.add('show');
+          setTimeout(() => {
+            window.location.href = '/goodbye';
+          }, 2000);
+        } else {
+          const data = await res.json();
+          notification.innerHTML = data.error.message;
+          notification.classList.add('show', 'error');
+          setTimeout(() => {
+            notification.classList.remove('show');
+          }, 2000);
+        }
+      } catch (err) {
+        console.error(err);
+        notification.innerHTML = 'An error occurred';
+        notification.classList.add('show', 'error');
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 2000);
+      }
+    });
+  </script>
+</body>
+</html>
