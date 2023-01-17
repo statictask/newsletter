@@ -13,25 +13,14 @@ import (
 	"go.uber.org/zap"
 )
 
-// CreateProjectSubscription creates a subscription entry in the project
-func CreateProjectSubscription(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Context-Type", "application/json")
-
-	var err error
-	var res utils.HTTPResponse
+// CreateSubscription creates a subscription entry in the project
+func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	projectID, err := strconv.Atoi(params["project_id"])
 	if err != nil {
-		log.L.Error("unable to parse project id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing project_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -40,61 +29,33 @@ func CreateProjectSubscription(w http.ResponseWriter, r *http.Request) {
 
 	s := New()
 	if err = json.NewDecoder(r.Body).Decode(&s); err != nil {
-		_log.Error("unable to decode the request body", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Bad Request",
-			StatusCode: 400,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		_log.Error("Failed decoding request body.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	if err = controller.Add(s); err != nil {
-		_log.Error("unable to add the new subscription", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		_log.Error("Failed adding new Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	_log.Info(
-		"subscription created successfully",
+		"Subscription created successfully.",
 		zap.Int64("subscription_id", s.ID),
 	)
 
-	res = utils.HTTPResponse{
-		Status:     "OK",
-		StatusCode: 200,
-		Data:       s,
-	}
-
-	json.NewEncoder(w).Encode(res)
+	utils.WriteJSONResponseData(w, http.StatusOK, s)
 }
 
 // GetProjectSubscription return a single subscription
-func GetProjectSubscription(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-
-	var err error
-	var res utils.HTTPResponse
+func GetSubscription(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	projectID, err := strconv.Atoi(params["project_id"])
 	if err != nil {
-		log.L.Error("unable to parse project id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing project_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -103,61 +64,33 @@ func GetProjectSubscription(w http.ResponseWriter, r *http.Request) {
 
 	subscriptionID, err := strconv.Atoi(params["subscription_id"])
 	if err != nil {
-		_log.Error("unable to parse subscription id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Bad Request",
-			StatusCode: 400,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing subscription_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	id := int64(subscriptionID)
 	_log = _log.With(zap.Int64("subscription_id", id))
 
-	subscription, err := controller.Get(id)
+	s, err := controller.Get(id)
 	if err != nil {
-		_log.Error("unable to get subscription", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		_log.Error("Failed getting Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	_log.Info("subscription retrieved successfully")
-	res = utils.HTTPResponse{
-		Status:     "OK",
-		StatusCode: 200,
-		Data:       subscription,
-	}
-
-	json.NewEncoder(w).Encode(res)
+	_log.Info("Subscription retrieved successfully.")
+	utils.WriteJSONResponseData(w, http.StatusOK, s)
 }
 
 // GetProjectSubscriptions return all subscriptions related to a given project
-func GetProjectSubscriptions(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-
-	var err error
-	var res utils.HTTPResponse
+func GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	projectID, err := strconv.Atoi(params["project_id"])
 	if err != nil {
-		log.L.Error("unable to parse project id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing project_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -166,45 +99,23 @@ func GetProjectSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 	subscriptions, err := controller.All()
 	if err != nil {
-		_log.Error("unable to load project subscriptions", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		_log.Error("Failed loading Subscriptions.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	_log.Info("subscriptions retrieved successfully")
-	res = utils.HTTPResponse{
-		Status:     "OK",
-		StatusCode: 200,
-		Data:       subscriptions,
-	}
-
-	json.NewEncoder(w).Encode(res)
+	_log.Info("Subscriptions retrieved successfully.")
+	utils.WriteJSONResponseData(w, http.StatusOK, subscriptions)
 }
 
-// UpdateProjectSubscription updates a subscription entry from the project
-func UpdateProjectSubscription(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-
-	var err error
-	var res utils.HTTPResponse
+// UpdateSubscription updates a subscription entry from the project
+func UpdateSubscription(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	projectID, err := strconv.Atoi(params["project_id"])
 	if err != nil {
-		log.L.Error("unable to parse project id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing project_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -213,85 +124,45 @@ func UpdateProjectSubscription(w http.ResponseWriter, r *http.Request) {
 
 	subscriptionID, err := strconv.Atoi(params["subscription_id"])
 	if err != nil {
-		_log.Error("unable to parse subscription id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Bad Request",
-			StatusCode: 400,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing subscription_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	id := int64(subscriptionID)
 	_log = _log.With(zap.Int64("subscription_id", id))
 
-	subscription, err := controller.Get(id)
+	s, err := controller.Get(id)
 	if err != nil {
-		_log.Error("unable to get subscription", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		_log.Error("Failed getting Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if err = json.NewDecoder(r.Body).Decode(&subscription); err != nil {
-		_log.Error("unable to decode the request body", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Bad Request",
-			StatusCode: 400,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+	if err = json.NewDecoder(r.Body).Decode(&s); err != nil {
+		_log.Error("Failed decoding request body.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if err = subscription.Update(); err != nil {
-		_log.Error("unable to update subscription", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+	if err = s.Update(); err != nil {
+		_log.Error("Failed updating Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	_log.Info("subscription updated successfully")
-	res = utils.HTTPResponse{
-		Status:     "OK",
-		StatusCode: 200,
-		Data:       subscription,
-	}
-
-	json.NewEncoder(w).Encode(res)
+	_log.Info("Subscription updated successfully.")
+	utils.WriteJSONResponseData(w, http.StatusOK, s)
 }
 
-// DeleteProjectSubscription deletes a subscription entry from the project
-func DeleteProjectSubscription(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-
-	var err error
-	var res utils.HTTPResponse
+// DeleteSubscription deletes a subscription entry from the project
+func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	projectID, err := strconv.Atoi(params["project_id"])
 	if err != nil {
-		log.L.Error("unable to parse project id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing project_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -300,42 +171,30 @@ func DeleteProjectSubscription(w http.ResponseWriter, r *http.Request) {
 
 	subscriptionID, err := strconv.Atoi(params["subscription_id"])
 	if err != nil {
-		_log.Error("unable to parse subscription id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Bad Request",
-			StatusCode: 400,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing subscription_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	id := int64(subscriptionID)
 	_log = _log.With(zap.Int64("subscription_id", id))
 
-	if err = controller.Delete(id); err != nil {
-		_log.Error("unable to delete subscription", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+	s, err := controller.Get(id)
+	if err != nil {
+		_log.Error("Failed getting Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	_log.Info("subscription deleted successfully")
-
-	msg := fmt.Sprintf("subscription %d deleted successfully", subscriptionID)
-	res = utils.HTTPResponse{
-		Status:     "OK",
-		StatusCode: 200,
-		Data:       utils.HTTPInfoMessage{msg},
+	if err = s.Delete(); err != nil {
+		_log.Error("Failed deleting Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusInternalServerError, err)
+		return
 	}
 
-	json.NewEncoder(w).Encode(res)
+	_log.Info("Subscription deleted successfully.")
+	msg := "Subscription deleted successfully."
+	utils.WriteJSONResponseMessage(w, http.StatusNoContent, msg)
 }
 
 // GetUnsubscribePage builds an HTML response with an unsbscribe page
@@ -344,7 +203,7 @@ func GetUnsubscribePage(w http.ResponseWriter, r *http.Request) {
 
 	token := r.URL.Query().Get("token")
 
-	s, err := Decrypt(token, "CHANGEME")
+	s, err := Decrypt(token)
 	if err != nil {
 		tmpl :=	template.Must(template.ParseFiles("static/404/index.html"))
         	tmpl.Execute(w, nil)
@@ -365,49 +224,27 @@ func GetUnsubscribePage(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteUnsubscribe builds an HTML response with an unsbscribe page
-func DeleteUnsubscribe(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-
+func DeleteSubscriptionByToken(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
 
-	s, err := Decrypt(token, "CHANGEME")
+	s, err := Decrypt(token)
 	if err != nil {
-		log.L.Error("unable to decrypt subscription token", zap.Error(err))
-		res := utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed to decrypt subscription token.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusNotFound, err)
 		return
 	}
 
 	_log := log.L.With(zap.Int64("project_id", s.ProjectID), zap.Int64("subscription_id", s.ID))
 	
 	if err = s.Delete(); err != nil {
-		_log.Error("unable to delete subscription", zap.Error(err))
-		res := utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed deleting subscription by token.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	_log.Info("subscription deleted successfully")
-
+	_log.Info("Subscription deleted successfully")
 	msg := fmt.Sprintf("subscription %d deleted successfully", s.ID)
-	res := utils.HTTPResponse{
-		Status:     "NO CONTENT",
-		StatusCode: 204,
-		Data:       utils.HTTPInfoMessage{msg},
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(w).Encode(res)
+	utils.WriteJSONResponseMessage(w, http.StatusNoContent, msg)
 }
 
 // GetGoodbyePage builds an HTML response with an unsbscribe page
@@ -421,24 +258,14 @@ func GetGoodbyePage(w http.ResponseWriter, r *http.Request) {
         tmpl.Execute(w, nil)
 }
 
-// GetSubscriptionEncryption return a single subscription token
-func GetSubscriptionEncryption(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-
-	var err error
-	var res utils.HTTPResponse
+// GetSubscriptionToken return a single subscription token
+func GetSubscriptionToken(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	projectID, err := strconv.Atoi(params["project_id"])
 	if err != nil {
-		log.L.Error("unable to parse project id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing project_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -447,52 +274,41 @@ func GetSubscriptionEncryption(w http.ResponseWriter, r *http.Request) {
 
 	subscriptionID, err := strconv.Atoi(params["subscription_id"])
 	if err != nil {
-		_log.Error("unable to parse subscription id", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Bad Request",
-			StatusCode: 400,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		log.L.Error("Failed parsing subscription_id.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	id := int64(subscriptionID)
 	_log = _log.With(zap.Int64("subscription_id", id))
 
-	subscription, err := controller.Get(id)
+	s, err := controller.Get(id)
 	if err != nil {
-		_log.Error("unable to get subscription", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Not Found",
-			StatusCode: 404,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+		_log.Error("Failed getting Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	token, err := subscription.Encrypt("CHANGEME")
-	if err != nil {
-		_log.Error("unable to get subscription token", zap.Error(err))
-		res = utils.HTTPResponse{
-			Status:     "Internal Server Error",
-			StatusCode: 500,
-			Data:       utils.HTTPErrorMessage{err.Error()},
-		}
-
-		json.NewEncoder(w).Encode(res)
+	if s == nil {
+		err = fmt.Errorf("Subscription not found.")
+		_log.Error("Failed getting Subscription.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	_log.Info("subscription token retrieved successfully")
-	res = utils.HTTPResponse{
-		Status:     "OK",
-		StatusCode: 200,
-		Data:       utils.HTTPInfoMessage{token},
+	token, err := s.Encrypt()
+	if err != nil {
+		_log.Error("Failed generating Subscription token.", zap.Error(err))
+		utils.WriteJSONResponseError(w, http.StatusInternalServerError, err)
+		return
 	}
 
-	json.NewEncoder(w).Encode(res)
+	_log.Info("Subscription token generated successfully.")
+	data := map[string]string {
+		"token": token,
+	}
+
+	fmt.Println(token)
+
+	utils.WriteJSONResponseData(w, http.StatusOK, &data)
 }

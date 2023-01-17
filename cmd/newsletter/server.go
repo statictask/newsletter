@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/statictask/newsletter/internal/database"
 	"github.com/statictask/newsletter/internal/log"
+	"github.com/statictask/newsletter/internal/config"
 	"github.com/statictask/newsletter/pkg/scheduler"
 	"github.com/statictask/newsletter/pkg/server"
 	"go.uber.org/zap"
@@ -49,13 +50,7 @@ func startServer(cmd *cobra.Command, args []string) {
 }
 
 func initDB(cmd *cobra.Command, args []string) {
-	database.Init(
-		getEnvOrDefaultString("POSTGRES_HOST"),
-		getEnvOrDefaultString("POSTGRES_PORT"),
-		getEnvOrDefaultString("POSTGRES_DATABASE"),
-		getEnvOrDefaultString("POSTGRES_USERNAME"),
-		getEnvOrDefaultString("POSTGRES_PASSWORD"),
-	)
+	database.Init()
 
 	if err := database.Ping(); err != nil {
 		log.L.Fatal("failed connecting to postgres", zap.Error(err))
@@ -72,17 +67,10 @@ func initSchedulers(cmd *cobra.Command, args []string) {
 	ts.Start()
 
 	ss := scheduler.NewScrapperJobScheduler()
-	ss.Start(
-		getEnvOrDefaultDuration("MIN_SCRAPE_INTERVAL"),
-		getEnvOrDefaultBool("ALLOW_PREVIOUS_PUBLICATIONS"),
-	)
+	ss.Start()
 
-	sm := scheduler.NewMailerJobScheduler()
-	sm.Start(
-		getEnvOrDefaultString("SENDGRID_USER_NAME"),
-		getEnvOrDefaultString("SENDGRID_USER_EMAIL"),
-		getEnvOrDefaultString("SENDGRID_API_KEY"),
-	)
+	sm := scheduler.NewPublisherJobScheduler()
+	sm.Start()
 }
 
 func initServer(cmd *cobra.Command, args []string) {
@@ -92,7 +80,7 @@ func initServer(cmd *cobra.Command, args []string) {
 	}
 
 	if bind == "" {
-		bind = getEnvOrDefaultString("BIND_ADDRESS")
+		bind = config.C.BindAddress
 	}
 
 	s := server.New()

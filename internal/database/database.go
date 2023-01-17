@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/statictask/newsletter/internal/config"
 )
 
 var (
@@ -13,7 +15,7 @@ var (
 // to access a Postgres instance
 type connectionOptions struct {
 	host     string
-	port     string
+	port     int64
 	database string
 	username string
 	password string
@@ -23,15 +25,19 @@ type connectionOptions struct {
 // that the database library understands
 func (c *connectionOptions) string() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		c.host, c.port, c.username, c.password, c.database,
 	)
 }
 
 // Init stores the database connection options
-func Init(host, port, database, username, password string) {
+func Init() {
 	conn = &connectionOptions{
-		host, port, database, username, password,
+		config.C.PostgresHost,
+		config.C.PostgresPort,
+		config.C.PostgresDatabase,
+		config.C.PostgresUsername,
+		config.C.PostgresPassword,
 	}
 }
 

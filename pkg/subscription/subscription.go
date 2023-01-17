@@ -51,6 +51,6 @@ func (s *Subscription) GetName() string {
 }
 
 // GetAddress returns the Email
-func (s *Subscription) GetAddress() string {
+func (s *Subscription) GetEmail() string {
 	return s.Email
 }

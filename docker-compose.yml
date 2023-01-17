@@ -16,7 +16,7 @@ services:
       - .env
     environment:
       NEWSLETTER_POSTGRES_HOST: postgres
-      NEWSLETTER_POSTGRES_PORT: "5432"
+      NEWSLETTER_POSTGRES_PORT: 5432
       NEWSLETTER_POSTGRES_DATABASE: newsletter
       NEWSLETTER_POSTGRES_USERNAME: newsletter
       NEWSLETTER_POSTGRES_PASSWORD: newsletter

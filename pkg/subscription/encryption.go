@@ -1,15 +1,17 @@
 package subscription
 
 import (
-    "crypto/aes"
-    "crypto/cipher"
-    "encoding/json"
-    "golang.org/x/crypto/scrypt"
-    "encoding/hex"
-    "fmt"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/json"
+	"golang.org/x/crypto/scrypt"
+	"encoding/hex"
+	"fmt"
+
+	"github.com/statictask/newsletter/internal/config"
 )
 
-func (s *Subscription) Encrypt(password string) (string, error) {
+func (s *Subscription) Encrypt() (string, error) {
 	// Convert the map to a JSON string
 	jsonData, err := json.Marshal(s)
 	if err != nil {
@@ -17,7 +19,7 @@ func (s *Subscription) Encrypt(password string) (string, error) {
 	}
 
 	// Generate a new AES key from password with
-	key, err := scrypt.Key([]byte(password), nil, 1<<15, 8, 1, 32)
+	key, err := scrypt.Key([]byte(config.C.SubscriptionAESPassword), nil, 1<<15, 8, 1, 32)
 	if err != nil {
 		return "", fmt.Errorf("failed generating derived key: %v", err)
 	}
@@ -40,14 +42,9 @@ func (s *Subscription) Encrypt(password string) (string, error) {
 	return token, nil
 }
 
-func Decrypt(token string, password string) (*Subscription, error) {
+func Decrypt(token string) (*Subscription, error) {
 	// Generate the key from the password
-
-	fmt.Println("---------------------------")
-	fmt.Println(token)
-	fmt.Println("---------------------------")
-
-	key, err := scrypt.Key([]byte(password), nil, 1<<15, 8, 1, 32)
+	key, err := scrypt.Key([]byte(config.C.SubscriptionAESPassword), nil, 1<<15, 8, 1, 32)
 	if err != nil {
 		return nil, fmt.Errorf("failed generating derived key: %v", err)
 	}

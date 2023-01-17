@@ -7,6 +7,7 @@ import (
 	"github.com/statictask/newsletter/pkg/pipeline"
 	"github.com/statictask/newsletter/pkg/post"
 	"github.com/statictask/newsletter/pkg/subscription"
+	"github.com/statictask/newsletter/pkg/template"
 )
 
 type Project struct {
@@ -64,4 +65,10 @@ func (p *Project) Pipelines() *pipeline.ProjectPipelines {
 // to pipelines of the respective project
 func (p *Project) Posts() *post.ProjectPosts {
 	return post.NewProjectPosts(p.ID)
+}
+
+// EmailTemplates returns a lazy interface for interacting with EmailTemplate
+// objects related to this Project
+func (p *Project) EmailTemplates() *template.ProjectEmailTemplates {	
+	return template.NewProjectEmailTemplates(p.ID)
 }

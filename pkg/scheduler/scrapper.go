@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"time"
 	"github.com/statictask/newsletter/pkg/scrapper"
 )
 
@@ -12,7 +11,7 @@ func NewScrapperJobScheduler() *ScrapperJobScheduler {
 }
 
 // Start creates a go routine to reconcile pipeline's tasks
-func (s *ScrapperJobScheduler) Start(minScrapeInterval time.Duration, allowPreviousPublications bool) {
-	job := scrapper.New(minScrapeInterval, allowPreviousPublications)
+func (s *ScrapperJobScheduler) Start() {
+	job := scrapper.New()
 	go job.Run()
 }

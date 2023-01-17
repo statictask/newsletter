@@ -9,6 +9,7 @@ import (
 
 	"github.com/statictask/newsletter/pkg/project"
 	"github.com/statictask/newsletter/pkg/subscription"
+	"github.com/statictask/newsletter/pkg/template"
 )
 
 var (
@@ -38,15 +39,24 @@ func (s *Server) Listen(bind string) error {
 	router.HandleFunc("/projects/{project_id}", project.DeleteProject).Methods("DELETE")
 	router.HandleFunc("/projects/{project_id}", project.UpdateProject).Methods("UPDATE")
 
+	// email template routes
+	router.HandleFunc("/projects/{project_id}/templates", template.GetEmailTemplates).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/templates", template.CreateEmailTemplate).Methods("POST")
+	router.HandleFunc("/projects/{project_id}/templates/{email_template_id}", template.GetEmailTemplate).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/templates/{email_template_id}", template.DeleteEmailTemplate).Methods("DELETE")
+	router.HandleFunc("/projects/{project_id}/templates/{email_template_id}", template.UpdateEmailTemplate).Methods("UPDATE")
+	router.HandleFunc("/projects/{project_id}/templates/{email_template_id}/_activate", template.ActivateEmailTemplate).Methods("GET")
+
+
 	// subscription routes
-	router.HandleFunc("/projects/{project_id}/subscriptions", subscription.GetProjectSubscriptions).Methods("GET")
-	router.HandleFunc("/projects/{project_id}/subscriptions", subscription.CreateProjectSubscription).Methods("POST")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.GetProjectSubscription).Methods("GET")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.DeleteProjectSubscription).Methods("DELETE")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.UpdateProjectSubscription).Methods("UPDATE")
-	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}/encrypt", subscription.GetSubscriptionEncryption).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/subscriptions", subscription.GetSubscriptions).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/subscriptions", subscription.CreateSubscription).Methods("POST")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.GetSubscription).Methods("GET")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.DeleteSubscription).Methods("DELETE")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}", subscription.UpdateSubscription).Methods("UPDATE")
+	router.HandleFunc("/projects/{project_id}/subscriptions/{subscription_id}/_token", subscription.GetSubscriptionToken).Methods("GET")
 	router.HandleFunc("/unsubscribe", subscription.GetUnsubscribePage).Queries("token", "{token}").Methods("GET")
-	router.HandleFunc("/unsubscribe", subscription.DeleteUnsubscribe).Queries("token", "{token}").Methods("DELETE")
+	router.HandleFunc("/unsubscribe", subscription.DeleteSubscriptionByToken).Queries("token", "{token}").Methods("DELETE")
 	router.HandleFunc("/goodbye", subscription.GetGoodbyePage).Methods("GET")
 
 	s.L.With(zap.String("bind", bind)).Info("listening")

@@ -24,8 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
-	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -33,26 +31,13 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/statictask/newsletter/internal/log"
+	"github.com/statictask/newsletter/internal/config"
 )
 
 var (
 	logger                       *zap.Logger
 	cfgFile, logLevel, logFormat string
 )
-
-var defaults = map[string]interface{}{
-	"POSTGRES_USERNAME": "newsletter",
-	"POSTGRES_PASSWORD": "newsletter",
-	"POSTGRES_HOST":     "localhost",
-	"POSTGRES_PORT":     "5432",
-	"POSTGRES_DATABASE": "newsletter",
-	"BIND_ADDRESS":      "127.0.0.1:8080",
-	"ALLOW_PREVIOUS_PUBLICATIONS": true,
-	"SENDGRID_API_KEY": "CHANGEME",
-	"SENDGRID_USER_EMAIL": "text@example.com",
-	"SENDGRID_USER_NAME": "Example User",
-	"MIN_SCRAPE_INTERVAL": "168h",  // 7 days
-}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -98,7 +83,7 @@ func initConfig() {
 	viper.SetEnvPrefix("NEWSLETTER")
 	viper.AutomaticEnv() // read in environment variables that match
 
-	for env := range defaults {
+	for env := range config.Defaults {
 		viper.BindEnv(env)
 	}
 
@@ -106,6 +91,8 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+
+	config.Initialize()
 }
 
 func initLogger() {
@@ -136,49 +123,4 @@ func initLogger() {
 	defer defaultLogger.Sync()
 
 	log.L = defaultLogger
-}
-
-// getEnvOrDefault returns the environment variable
-// value returned by viper or the hardcoded default
-func getEnvOrDefault(key string) interface{} {
-	defaultValue, ok := defaults[key]
-	if !ok {
-		logger.Fatal(fmt.Sprintf("default environment variable %s doesn't exist", key))
-	}
-
-	v := viper.Get(strings.ToLower(key))
-	if v == nil {
-		return defaultValue
-	}
-
-	return v
-}
-
-// getEnvOrDefaultInt64 returns the environment variable
-// value returned by viper or the hardcoded default
-func getEnvOrDefaultInt64(key string) int64 {
-	return getEnvOrDefault(key).(int64)
-}
-
-// getEnvOrDefaultBool returns the environment variable
-// value returned by viper or the hardcoded default
-func getEnvOrDefaultBool(key string) bool {
-	return getEnvOrDefault(key).(bool)
-}
-
-// getEnvOrDefaultString returns the environment variable
-// value returned by viper or the hardcoded default
-func getEnvOrDefaultString(key string) string {
-	return getEnvOrDefault(key).(string)
-}
-
-// getEnvOrDefaultDuration returns the environment variable
-// value returned by viper or the hardcoded default
-func getEnvOrDefaultDuration(key string) time.Duration {
-	duration, err := time.ParseDuration(getEnvOrDefault(key).(string))
-	if err != nil {
-		log.L.Fatal("failed parsing duration", zap.Error(err))
-	}
-
-	return duration
 }

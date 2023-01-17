@@ -1,15 +1,15 @@
 package scheduler
 
-import "github.com/statictask/newsletter/pkg/mailer"
+import "github.com/statictask/newsletter/pkg/publisher"
 
-type MailerJobScheduler struct{}
+type PublisherJobScheduler struct{}
 
-func NewMailerJobScheduler() *MailerJobScheduler {
-	return &MailerJobScheduler{}
+func NewPublisherJobScheduler() *PublisherJobScheduler {
+	return &PublisherJobScheduler{}
 }
 
 // Start creates a go routine to reconcile pipeline's tasks
-func (s *MailerJobScheduler) Start(name, address, key string) {
-	job := mailer.New(name, address, key)
+func (s *PublisherJobScheduler) Start() {
+	job := publisher.New()
 	go job.Run()
 }

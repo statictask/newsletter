@@ -44,7 +44,6 @@ func (ps *ProjectSubscriptions) Delete(subscriptionID int64) error {
 }
 
 // Add creates a new entry in the project's subscriptions
-// the function creates a new subscription entry in the database
 func (ps *ProjectSubscriptions) Add(s *Subscription) error {
 	// make sure the subscription has the corred ProjectID before adding
 	s.ProjectID = ps.projectID

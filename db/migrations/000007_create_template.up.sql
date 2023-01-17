@@ -1,0 +1,17 @@
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS email_templates (
+	email_template_id SERIAL PRIMARY KEY,  
+	project_id INTEGER REFERENCES projects (project_id) ON DELETE CASCADE NOT NULL,
+	name VARCHAR(300) NOT NULL,
+	is_active BOOLEAN NOT NULL DEFAULT FALSE,
+	subject VARCHAR(300) NOT NULL,
+	content TEXT NOT NULL,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+SELECT db_manage_updated_at('email_templates');
+
+COMMIT;
+

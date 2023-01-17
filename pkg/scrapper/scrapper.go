@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/statictask/newsletter/internal/log"
+	"github.com/statictask/newsletter/internal/config"
 	"github.com/statictask/newsletter/pkg/post"
 	"github.com/statictask/newsletter/pkg/postitem"
 	"github.com/statictask/newsletter/pkg/project"
@@ -17,8 +18,11 @@ type Scrapper struct {
 	AllowPreviousPublications bool
 }
 
-func New(minScrapeInterval time.Duration, allowPreviousPublications bool) *Scrapper {
-	return &Scrapper{minScrapeInterval, allowPreviousPublications}
+func New() *Scrapper {
+	return &Scrapper{
+		config.C.MinScrapeInterval,
+		config.C.AllowPreviousPublications,
+	}
 }
 
 // Run checks if there are new items published in the feed since the last
